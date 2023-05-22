@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# asdf
+. $HOME/.asdf/asdf.sh
+. $HOME/.asdf/completions/asdf.bash
+
+# set default editor to Vim
+export EDITOR=nvim
+
+
+#fly.io
+export FLYCTL_INSTALL="/home/wilson/.fly"
+export PATH="$FLYCTL_INSTALL/bin:$PATH"
+
+#My Bins
+export PATH=$PATH:~/bin
+
+# Turso
+export PATH="/home/wilson/.turso:$PATH"
+
+PATH=~/.console-ninja/.bin:$PATH
 
 #WINEVN
 alias winevn='LC_ALL="ja_JP.UTF-8" TZ="Asia/Tokyo" WINEPREFIX=~/.winevn wine'
