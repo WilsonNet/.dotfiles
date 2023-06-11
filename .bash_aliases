@@ -37,6 +37,10 @@ alias texthooker='winevn /run/media/wilson/wil/ajatt/tools/Textractor/x86/Textra
 #fzf
 alias fzfd='cd $(find ~ -type d -print | fzf)'
 
+#zoxide
+eval "$(zoxide init bash)"
+
+
 alias clip='xclip -sel clip'
 
 alias gwip='git add -A; git rm $(git ls-files --deleted) 2> /dev/null; git commit --no-verify --no-gpg-sign -m "--wip-- [skip ci]"'
@@ -52,3 +56,30 @@ function timebox {
   timer $time && mpv $sound_file
 }
 
+function ttask {
+  local flag=$1;
+  local all_args=("$@")
+  local rest_args=("${all_args[@]:1}")
+
+  case $flag in
+    "add")
+      task add $rest_args project:"today" due:"eod";
+      ;;
+    "list")
+      task list project:"today";
+      ;;
+    *)
+      echo "Invalid flag";
+      ;;
+  esac
+}
+
+function shutdownp {
+  echo -n "Are you sure you want to shut down? (y/n): "
+  read choice
+  if [[ $choice == "y" || $choice == "Y" ]]; then
+    shutdown
+  else
+    echo "Shutdown canceled."
+  fi
+}
