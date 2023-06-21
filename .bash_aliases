@@ -82,3 +82,6 @@ function shutdownp {
     echo "Shutdown canceled."
   fi
 }
+
+export PATH="$(yarn global bin):$PATH"
+
