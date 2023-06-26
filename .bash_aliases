@@ -83,5 +83,9 @@ function shutdownp {
   fi
 }
 
+function nodeIpv4 {
+  export NODE_OPTIONS="--dns-result-order=ipv4first"
+}
+
 export PATH="$(yarn global bin):$PATH"
 
