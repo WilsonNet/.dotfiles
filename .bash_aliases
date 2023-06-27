@@ -89,3 +89,9 @@ function nodeIpv4 {
 
 export PATH="$(yarn global bin):$PATH"
 
+
+
+#Fcitx5
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+XMODIFIERS=@im=fcitx
