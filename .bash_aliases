@@ -1,11 +1,5 @@
 #!/bin/bash
 
-#Fcitx5
-export GTK_IM_MODULE=fcitx
-export QT_IM_MODULE=fcitx
-export SDL_IM_MODULE=fcitx
-export XMODIFIERS=@im=fcitx
-
 # asdf
 . $HOME/.asdf/asdf.sh
 . $HOME/.asdf/completions/asdf.bash
@@ -94,6 +88,4 @@ function nodeIpv4 {
 }
 
 export PATH="$(yarn global bin):$PATH"
-
-
 
