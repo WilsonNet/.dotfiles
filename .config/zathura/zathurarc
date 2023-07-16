@@ -1,0 +1,3 @@
+set sandbox strict
+map D set "first-page-column 1:1"
+map <C-d> set "first-page-column 1:2"
