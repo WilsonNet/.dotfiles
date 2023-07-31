@@ -89,3 +89,6 @@ function nodeIpv4 {
 
 export PATH="$(yarn global bin):$PATH"
 
+
+export FLYCTL_INSTALL="/root/.fly"
+export PATH="$FLYCTL_INSTALL/bin:$PATH"
