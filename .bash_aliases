@@ -83,3 +83,4 @@ function nodeIpv4 {
 }
 
 export PATH="$(yarn global bin):$PATH"
+export PATH="/home/wilsonn/.cargo/bin:$PATH"
