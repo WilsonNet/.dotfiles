@@ -1,28 +1,18 @@
 #!/bin/bash
 
-# asdf
-. $HOME/.asdf/asdf.sh
-. $HOME/.asdf/completions/asdf.bash
-
 # set default editor to Vim
 export EDITOR=nvim
 
 #My Bins
 export PATH=$PATH:~/bin
 
-# Turso
-export PATH="/home/wilson/.turso:$PATH"
-
-export PATH=~/.console-ninja/.bin:$PATH
-
 #WINEVN
 alias winevn='LC_ALL="ja_JP.UTF-8" TZ="Asia/Tokyo" WINEPREFIX=~/.winevn wine'
 alias wineffd='LC_ALL="ja_JP.UTF-8" TZ="Asia/Tokyo" WINEPREFIX=~/.wineffd wine'
 
-#Grisaia 
-alias grisaiaload='cdemu load 0 /run/media/wilson/wil/ajatt/vn/r49197/grisaia-no-kajitsu/GRISAIA.MDS'
-alias grisaiamount='sudo mount -o loop /run/media/wilson/wil/ajatt/vn/r49197/grisaia-no-kajitsu/GRISAIA.ISO /media/cdrom0'
-alias grisaiastart='cd /media/cdrom0/ && winevn bootmenu.exe'
+#ChaosHead 
+alias chaosfrida='protontricks-launch --appid 1961950 ~/Downloads/frida-server-16.2.1-windows-x86_64.exe'
+alias chaostask='protontricks -c "wine taskmgr" 1961950'
 
 #CDEmu
 alias cdunload='cdemu unload 0'
@@ -33,7 +23,7 @@ alias texthooker='winevn /run/media/wilson/wil/ajatt/tools/Textractor/x86/Textra
 alias fzfd='cd $(find ~ -type d -print | fzf)'
 
 #zoxide
-eval "$(zoxide init bash)"
+eval "$(zoxide init zsh)"
 
 
 alias clip='xclip -sel clip'
@@ -54,7 +44,8 @@ function timebox {
   local time=$1
   local sound_file=~/sounds/ringing.ogg
 
-  timer $time && mpv $sound_file
+  # https://github.com/caarlos0/timer
+  timer $time && mpv $sound_file --no-resume-playback
 }
 
 function ttask {
@@ -75,19 +66,11 @@ function ttask {
   esac
 }
 
-function shutdownp {
-  echo -n "Are you sure you want to shut down? (y/n): "
-  read choice
-  if [[ $choice == "y" || $choice == "Y" ]]; then
-    shutdown
-  else
-    echo "Shutdown canceled."
-  fi
-}
-
 function nodeIpv4 {
   export NODE_OPTIONS="--dns-result-order=ipv4first"
 }
 
-export PATH="$(yarn global bin):$PATH"
+# export PATH="$(yarn global bin):$PATH"
 export PATH="/home/wilsonn/.cargo/bin:$PATH"
+
+alias sine-a="mpv ~/sounds/a440hz.opus"

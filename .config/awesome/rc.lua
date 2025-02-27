@@ -67,6 +67,7 @@ modkey = "Mod4"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
+  awful.layout.suit.spiral.dwindle,
   awful.layout.suit.tile,
   -- awful.layout.suit.floating,
   awful.layout.suit.tile.left,
@@ -75,7 +76,6 @@ awful.layout.layouts = {
   awful.layout.suit.fair,
   awful.layout.suit.fair.horizontal,
   awful.layout.suit.spiral,
-  awful.layout.suit.spiral.dwindle,
   -- awful.layout.suit.max,
   -- awful.layout.suit.max.fullscreen,
   awful.layout.suit.magnifier,
@@ -338,6 +338,12 @@ globalkeys = gears.table.join(
     { description = "lock screen", group = "launcher" }),
   awful.key({ modkey, "Shift" }, "s", function() awful.spawn("transformers_ocr recognize") end,
     { description = "Use transformers_ocr", group = "ajatt" }),
+  awful.key({ modkey, "Shift" }, "d", function() awful.spawn("bash /home/wilsonn/bin/ames.sh -s") end,
+    { description = "Screenshot and send to Anki with ames", group = "ajatt" }),
+  awful.key({ modkey, "Shift" }, "a", function() awful.spawn("bash /home/wilsonn/bin/ames.sh -r") end,
+    { description = "Record audio and send to Anki with ames", group = "ajatt" }),
+  awful.key({ modkey, "Shift" }, "z", function() awful.spawn("bash /home/wilsonn/bin/ames.sh -c") end,
+    { description = "Send clipboard to Anki with ames", group = "ajatt" }),
 
   awful.key({ modkey }, "x",
     function()
