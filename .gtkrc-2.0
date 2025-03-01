@@ -1,1 +1,2 @@
 gtk-application-prefer-dark-theme = true
+gtk-im-module="fcitx"
