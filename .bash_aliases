@@ -5,6 +5,7 @@ export EDITOR=nvim
 
 #My Bins
 export PATH=$PATH:~/bin
+export PATH=$PATH:/home/wilsonn/.local/bin
 
 #WINEVN
 alias winevn='LC_ALL="ja_JP.UTF-8" TZ="Asia/Tokyo" WINEPREFIX=~/.winevn wine'
