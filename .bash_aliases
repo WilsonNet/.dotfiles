@@ -2,6 +2,7 @@
 
 # set default editor to Vim
 export EDITOR=nvim
+export MCFLY_FUZZY=2
 
 #My Bins
 export PATH=$PATH:~/bin
