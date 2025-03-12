@@ -5,8 +5,9 @@ export EDITOR=nvim
 export MCFLY_FUZZY=2
 
 #My Bins
-export PATH=$PATH:~/bin
-export PATH=$PATH:/home/wilsonn/.local/bin
+export PATH=$PATH:$HOME/bin
+export PATH=$PATH:$HOME/.local/bin
+export PATH=$PATH:$HOME/.cargo/bin
 
 #WINEVN
 alias winevn='LC_ALL="ja_JP.UTF-8" TZ="Asia/Tokyo" WINEPREFIX=~/.winevn wine'
@@ -73,6 +74,5 @@ function nodeIpv4 {
 }
 
 # export PATH="$(yarn global bin):$PATH"
-export PATH="/home/wilsonn/.cargo/bin:$PATH"
 
 alias sine-a="mpv ~/sounds/a440hz.opus"

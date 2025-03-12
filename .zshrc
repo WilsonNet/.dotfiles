@@ -30,9 +30,12 @@ compinit
 # Created by newuser for 5.9
 
 
-source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+#source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 source ~/.bash_aliases
 export STARSHIP_CONFIG=~/.config/starship.toml
 eval "$(starship init zsh)"
 eval "$(mcfly init zsh)"
 
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
