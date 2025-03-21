@@ -76,3 +76,25 @@ function nodeIpv4 {
 # export PATH="$(yarn global bin):$PATH"
 
 alias sine-a="mpv ~/sounds/a440hz.opus"
+
+#React Native - Android
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+
+BLOCKED_SITES=("reddit.com" "g1.globo.com")
+
+function block_sites {
+  local host_file="/etc/hosts"
+  for site in "${BLOCKED_SITES[@]}"; do
+    echo "127.0.0.1 $site" | sudo tee -a $host_file > /dev/null
+  done
+}
+
+function unblock_sites {
+  local host_file="/etc/hosts"
+  for site in "${BLOCKED_SITES[@]}"; do
+    sudo sed -i "/127.0.0.1 $site/d" $host_file
+  done
+}
