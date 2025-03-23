@@ -49,4 +49,6 @@ export SDKMAN_DIR="$HOME/.sdkman"
 
 # pnpm
 
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+if command -v brew &>/dev/null; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
