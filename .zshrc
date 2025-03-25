@@ -48,6 +48,7 @@ export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 # pnpm
+source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 if command -v brew &>/dev/null; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
