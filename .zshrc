@@ -53,3 +53,10 @@ source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 if command -v brew &>/dev/null; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
+
+# bun completions
+[ -s "/home/wilsonneto/.bun/_bun" ] && source "/home/wilsonneto/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
