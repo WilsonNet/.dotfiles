@@ -57,6 +57,11 @@ fi
 # bun completions
 [ -s "/home/wilsonneto/.bun/_bun" ] && source "/home/wilsonneto/.bun/_bun"
 
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)
+
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+alias invim='nvim $(fd --type dir | fzf)'
