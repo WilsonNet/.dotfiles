@@ -225,7 +225,7 @@
         "running": "待",
         "paused": "止"
       },
-      "on-click": "$HOME/bin/waybar_timer new 5 'notify-send \"Session finished\" && mpv $HOME/sounds/not.mp3 --no-resume-playback'",
+      "on-click": "$HOME/bin/waybar_timer new 10 'notify-send \"Session finished\" && mpv $HOME/sounds/not.mp3 --no-resume-playback'",
       "on-click-middle": "$HOME/bin/waybar_timer cancel",
       "on-click-right": "$HOME/bin/waybar_timer togglepause",
       "on-scroll-up": "$HOME/bin/waybar_timer increase 60 || /path/to/waybar_timer new 1 'notify-send -u critical \"Timer expired\"'",
