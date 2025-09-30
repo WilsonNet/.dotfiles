@@ -289,8 +289,16 @@ encode_img() {
 }
 
 take_screenshot_region() {
-    # function to take a screenshot of a given screen region.
-    region="$(slurp)"
+    # Take a screenshot of a selected region or window in Hyprland.
+    # 1. Query all Hyprland clients (windows) as JSON.
+    # 2. Get active workspace IDs for all monitors.
+    # 3. Filter for visible windows in active workspaces.
+    # 4. Format each window's region as "x,y widthxheight".
+    # 5. Pass all regions to slurp, so the user can select a window by clicking or a region by dragging.
+    regions="$(hyprctl clients -j | jq --argjson active $(hyprctl monitors -j | jq -c '[.[].activeWorkspace.id]') '.[] | select((.hidden | not) and (.workspace.id as $id | $active | contains([$id]))) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' -r)"
+    # Store the region selected by the user (either a window or a custom region)
+    region="$(echo "$regions" | slurp)"
+    # Take a screenshot of the selected region
     grim -g "$region" "$1"
 }
 
