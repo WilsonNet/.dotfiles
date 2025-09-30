@@ -48,7 +48,6 @@ usage() {
     echo "-h: display this help message"
     echo "-r: record audio toggle"
     echo "-s: interactive screenshot"
-    echo "-a: screenshot same region again (defaults to -s if no region)"
     echo "-w: screenshot currently active window (xdotool)"
     echo "-c: export copied text (contents of the CLIPBOARD selection)"
 }
@@ -289,18 +288,10 @@ encode_img() {
         "$dest_path"
 }
 
-get_selection() {
-    # get a region of the screen for future screenshotting.
-    slop
-}
-
 take_screenshot_region() {
     # function to take a screenshot of a given screen region.
-    # $1 is the geometry of the region from get_selection().
-    # $2 is the output file name.
-    local -r geom="$1"
-    local -r path="$2"
-    maim --hidecursor "$path" -g "$geom"
+    region="$(slurp)"
+    grim -g "$region" "$1"
 }
 
 take_screenshot_window() {
@@ -313,40 +304,17 @@ take_screenshot_window() {
 screenshot() {
     # take a screenshot by prompting the user for a selection
     # and then add this image to the last Anki card.
-    local -r geom="$(get_selection)"
     local -r path="$(mktemp /tmp/maim-screenshot.XXXXXX.png)"
     local -r base_path="$(basename -- "$path" | cut -d "." -f-2)"
     local -r converted_path="/tmp/$base_path.$IMAGE_FORMAT"
 
-    take_screenshot_region "$geom" "$path"
+    take_screenshot_region "$path"
     encode_img "$path" "$converted_path"
 
     rm "$path"
-    echo "$geom" >/tmp/previous-maim-screenshot
     store_file "$converted_path"
     update_img "$(basename -- "$converted_path")"
     notify_screenshot_add
-}
-
-again() {
-    # if screenshot() has been called, then repeat take another screenshot
-    # with the same dimensions as last time and add to the last Anki card.
-    # otherwise, call screenshot().
-    local -r path="$(mktemp /tmp/maim-screenshot.XXXXXX.png)"
-    local -r base_path="$(basename -- "$path" | cut -d "." -f-2)"
-    local -r converted_path="/tmp/$base_path.$IMAGE_FORMAT"
-
-    if [[ -f /tmp/previous-maim-screenshot ]]; then
-        take_screenshot_region "$(cat /tmp/previous-maim-screenshot)" "$path"
-        encode_img "$path" "$converted_path"
-        rm "$path"
-        store_file "$converted_path"
-        get_last_id
-        update_img "$(basename -- "$converted_path")"
-        notify_screenshot_add
-    else
-        screenshot
-    fi
 }
 
 screenshot_window() {
@@ -427,15 +395,12 @@ record() {
 }
 
 copied_text() {
-    # get the contents of the clipboard.
-    if command -v xclip &> /dev/null
+    # get the contents of the clipboard on Wayland.
+    if command -v wl-paste &> /dev/null
     then
-        xclip -o -selection clipboard
-    elif command -v xsel &> /dev/null
-    then
-        xsel -b
+        wl-paste
     else
-        echo "Couldn't find xclip or xsel." >&2
+        notify_message "Couldn't find wl-paste."
         exit 1
     fi
 }
@@ -463,7 +428,6 @@ while getopts 'hrsawc' flag; do
         h) usage ;;
         r) record ;;
         s) screenshot ;;
-        a) again ;;
         w) screenshot_window ;;
         c) clipboard ;;
         *) ;;
