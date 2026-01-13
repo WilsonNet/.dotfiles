@@ -36,7 +36,8 @@
       "disable-scroll": true,
       "all-outputs": true,
       "warp-on-scroll": false,
-      "format": "{name}: {icon}",
+      "format": "{icon}",
+	  "justify": "center",
       "format-icons": {
         "1": "一",
         "2": "二",
@@ -47,10 +48,7 @@
         "7": "七",
         "8": "八",
         "9": "九",
-        "10": "十",
-        "urgent": "",
-        "active": "",
-        "default": ""
+        "10": "十"
       }
     },
     "keyboard-state": {
