@@ -68,3 +68,7 @@ alias invim='nvim $(fd --type dir | fzf)'
 
 # opencode
 export PATH=/home/wilsonn/.opencode/bin:$PATH
+
+if [[ -f ~/.zshrc.local ]]; then
+    source ~/.zshrc.local
+fi
