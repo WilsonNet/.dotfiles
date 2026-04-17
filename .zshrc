@@ -20,11 +20,14 @@ fi
 # The following lines were added by compinstall
 zstyle :compinstall filename '/home/wilsonn/.zshrc'
 
-. "$HOME/.asdf/asdf.sh"
-fpath=(${ASDF_DIR}/completions $fpath)
+#ASDF 
+export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
 
+mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
+asdf completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_asdf"
 autoload -Uz compinit
 compinit
+
 # End of lines added by compinstall
 #
 # Created by newuser for 5.9
@@ -34,7 +37,6 @@ compinit
 source ~/.bash_aliases
 export STARSHIP_CONFIG=~/.config/starship.toml
 eval "$(starship init zsh)"
-eval "$(mcfly init zsh)"
 
 export PNPM_HOME="/home/wilsonneto/.local/share/pnpm"
 case ":$PATH:" in
@@ -50,9 +52,7 @@ export SDKMAN_DIR="$HOME/.sdkman"
 # pnpm
 source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-if command -v brew &>/dev/null; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # bun completions
 [ -s "/home/wilsonneto/.bun/_bun" ] && source "/home/wilsonneto/.bun/_bun"
@@ -60,6 +60,7 @@ fi
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
 
+eval "$(mcfly init zsh)"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
