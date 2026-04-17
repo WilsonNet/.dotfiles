@@ -20,7 +20,8 @@
 		"bash": "ask"
 	},
 	"plugin": [
-		"@mohak34/opencode-notifier@latest"
+		"@mohak34/opencode-notifier@latest",
+		"./plugins/rtk.ts"
 	],
 	"agent": {
 		"explore": {
