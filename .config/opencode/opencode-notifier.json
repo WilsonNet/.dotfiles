@@ -1,0 +1,40 @@
+{
+  "sound": false,
+  "notification": true,
+  "timeout": 5,
+  "showProjectName": true,
+  "showSessionTitle": true,
+  "showIcon": true,
+  "suppressWhenFocused": true,
+  "enableOnDesktop": false,
+  "linux": {
+    "grouping": false
+  },
+  "command": {
+    "enabled": true,
+    "path": "/bin/bash",
+    "args": [
+      "-c",
+      "TMUX_SESSION=$(tmux display-message -p '#S' 2>/dev/null); TMUX_WINDOW=$(tmux display-message -p '#I:#W' 2>/dev/null); if [ -n \"$TMUX_SESSION\" ] && [ -n \"$TMUX_WINDOW\" ]; then MSG=\"{message}\\n[tmux: $TMUX_SESSION - $TMUX_WINDOW]\"; TMUX_MSG=\"[{event}] {message} [$TMUX_SESSION:$TMUX_WINDOW]\"; else MSG=\"{message}\"; TMUX_MSG=\"[{event}] {message}\"; fi; notify-send \"OpenCode: {event}\" \"$MSG\" -i terminal -a \"OpenCode\" -u normal --hint=string:x-canonical-private-synchronous:opencode; tmux display-message -d 5000 \"$TMUX_MSG\""
+    ],
+    "minDuration": 0
+  },
+  "events": {
+    "permission": { "sound": true, "notification": false, "command": true },
+    "complete": { "sound": false, "notification": false, "command": false },
+    "subagent_complete": { "sound": false, "notification": false, "command": false },
+    "error": { "sound": false, "notification": false, "command": false },
+    "question": { "sound": true, "notification": false, "command": true },
+    "user_cancelled": { "sound": false, "notification": false, "command": false },
+    "plan_exit": { "sound": false, "notification": false, "command": false }
+  },
+  "messages": {
+    "permission": "Permission needed in {projectName}",
+    "complete": "Session finished: {sessionTitle}",
+    "subagent_complete": "Subagent task completed: {sessionTitle}",
+    "error": "Session encountered an error: {sessionTitle}",
+    "question": "Question asked in {projectName}",
+    "user_cancelled": "Session was cancelled by user: {sessionTitle}",
+    "plan_exit": "Plan ready for review: {sessionTitle}"
+  }
+}

@@ -68,7 +68,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 alias invim='nvim $(fd --type dir | fzf)'
 
 # opencode
-export PATH=/home/wilsonn/.opencode/bin:$PATH
+export PATH=/home/wilsonneto/.opencode/bin:$PATH
 
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
