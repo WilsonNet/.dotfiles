@@ -17,7 +17,8 @@
 		}
 	},
 	"permission": {
-		"bash": "ask"
+		"bash": "ask",
+		"websearch": "allow"
 	},
 	"plugin": [
 		"@mohak34/opencode-notifier@latest",
