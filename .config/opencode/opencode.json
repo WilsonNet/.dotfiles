@@ -26,7 +26,7 @@
 	],
 	"agent": {
 		"explore": {
-			"model": "opencode-go/minimax-m2.7"
+			"model": "opencode-go/deepseek-v4-flash-high"
 		}
 	}
 }
