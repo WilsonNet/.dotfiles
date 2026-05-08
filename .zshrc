@@ -30,7 +30,7 @@ source ~/.bash_aliases
 export STARSHIP_CONFIG=~/.config/starship.toml
 eval "$(starship init zsh)"
 
-export PNPM_HOME="/home/wilsonneto/.local/share/pnpm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -45,7 +45,7 @@ export SDKMAN_DIR="$HOME/.sdkman"
 source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # bun completions
-[ -s "/home/wilsonneto/.bun/_bun" ] && source "/home/wilsonneto/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
@@ -58,7 +58,13 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 alias invim='nvim $(fd --type dir | fzf)'
 
 # opencode
-export PATH=/home/wilsonneto/.opencode/bin:$PATH
+export PATH=$HOME/.opencode/bin:$PATH
+
+# asdf
+export ASDF_DATA_DIR="$HOME/.asdf"
+export PATH="$ASDF_DATA_DIR/shims:$PATH"
+fpath=($ASDF_DATA_DIR/completions $fpath)
+autoload -Uz compinit && compinit
 
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
