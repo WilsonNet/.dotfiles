@@ -30,18 +30,8 @@ source ~/.bash_aliases
 export STARSHIP_CONFIG=~/.config/starship.toml
 eval "$(starship init zsh)"
 
-export PNPM_HOME="$HOME/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
 
-# pnpm end
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-# pnpm
 source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # bun completions
@@ -50,21 +40,38 @@ source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
 
-eval "$(mcfly init zsh)"
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
 alias invim='nvim $(fd --type dir | fzf)'
 
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
 
+# brew - needs to be before asdf since asdf is installed via brew
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
+
+
+eval "$(mcfly init zsh)"
 # asdf
 export ASDF_DATA_DIR="$HOME/.asdf"
 export PATH="$ASDF_DATA_DIR/shims:$PATH"
 fpath=($ASDF_DATA_DIR/completions $fpath)
 autoload -Uz compinit && compinit
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+export PNPM_HOME="$HOME/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+#DENO
+export DENO_INSTALL="$HOME/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+# deno install --global binaries (managed by asdf)
+DENO_VERSION=$(asdf current deno 2>/dev/null | awk '{print $2}')
+[ -n "$DENO_VERSION" ] && export PATH="$ASDF_DATA_DIR/installs/deno/$DENO_VERSION/.deno/bin:$PATH"
 
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
