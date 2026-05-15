@@ -69,10 +69,8 @@ esac
 #DENO
 export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
-# deno install --global binaries (managed by asdf)
-DENO_VERSION=$(asdf current deno 2>/dev/null | awk '{print $2}')
-[ -n "$DENO_VERSION" ] && export PATH="$ASDF_DATA_DIR/installs/deno/$DENO_VERSION/.deno/bin:$PATH"
 
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
+. "$HOME/.deno/env"
