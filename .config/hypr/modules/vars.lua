@@ -1,0 +1,6 @@
+return {
+    terminal    = "kitty",
+    fileManager = "thunar",
+    menu        = "wofi --show drun",
+    mainMod     = "SUPER",
+}
