@@ -1,7 +1,0 @@
-require("modules.vars")
-require("modules.env")
-require("modules.settings")
-require("modules.animations")
-require("modules.monitors")
-require("modules.keybinds")
-require("modules.window-rules")
