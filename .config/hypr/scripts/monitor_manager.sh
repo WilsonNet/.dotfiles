@@ -3,6 +3,10 @@
 # Replaces kanshi for dynamic display configuration
 
 reapply() {
+    # Debounce: skip if another reapply is already running
+    local lock="/tmp/hypr-monitor.lock"
+    mkdir "$lock" 2>/dev/null || return
+
     sleep 0.3
     if hyprctl monitors all 2>/dev/null | grep -q "LG ULTRAWIDE"; then
         hyprctl keyword monitor "desc:LG Electronics LG ULTRAWIDE 209AZPU4U744, 3440x1440@84.96, auto, 1.333333"
@@ -14,6 +18,7 @@ reapply() {
         hyprctl keyword monitor "eDP-1, preferred, auto, 1.6"
     fi
     pkill waybar 2>/dev/null; waybar &
+    rmdir "$lock" 2>/dev/null
 }
 
 stream_sp() {
