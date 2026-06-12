@@ -162,7 +162,8 @@ button:hover {
 }
 
 #power-profiles-daemon {
-    padding-right: 0px;
+    padding: 0 10px;
+    font-size: 18px;
 }
 
 #power-profiles-daemon.performance {
