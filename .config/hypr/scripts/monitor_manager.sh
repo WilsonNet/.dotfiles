@@ -49,9 +49,6 @@ case "$1" in
         ;;
 esac
 
-# Apply config on startup
-reapply
-
 # Daemon mode: listen for Hyprland socket2 events
 SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
 while true; do
