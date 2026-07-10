@@ -1,0 +1,26 @@
+#!/bin/bash
+
+POLICY_PATH="/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference"
+
+case "$1" in
+    "get")
+        value=$(cat "$POLICY_PATH")
+        echo "{\"text\": \"$value\", \"class\": \"$value\"}"
+        ;;
+    "next")
+        current=$(cat "$POLICY_PATH")
+        case "$current" in
+            "power")                next="balance_power" ;;
+            "balance_power")        next="balance_performance" ;;
+            "balance_performance")  next="performance" ;;
+            "performance")          next="power" ;;
+            *)                      next="balance_performance" ;;
+        esac
+        echo "$next" | sudo tee "$POLICY_PATH" > /dev/null
+        echo "{\"text\": \"$next\", \"class\": \"$next\"}"
+        ;;
+    *)
+        echo "Usage: power-mode {get|next}"
+        exit 1
+        ;;
+esac

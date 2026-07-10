@@ -108,7 +108,7 @@ button:hover {
 #mode,
 #idle_inhibitor,
 #scratchpad,
-#power-profiles-daemon,
+    #custom-power-mode,
 #mpd,
 #custom-timer {
     padding: 0 10px;
@@ -161,22 +161,27 @@ button:hover {
     animation-direction: alternate;
 }
 
-#power-profiles-daemon {
+#custom-power-mode {
     padding: 0 10px;
     font-size: 18px;
 }
 
-#power-profiles-daemon.performance {
+#custom-power-mode.performance {
     background-color: alpha(@red, 0.75);
     color: @base;
 }
 
-#power-profiles-daemon.balanced {
+#custom-power-mode.balance_performance {
+    background-color: alpha(@peach, 0.75);
+    color: @base;
+}
+
+#custom-power-mode.balance_power {
     background-color: alpha(@blue, 0.75);
     color: @base;
 }
 
-#power-profiles-daemon.power-saver {
+#custom-power-mode.power {
     background-color: alpha(@teal, 0.75);
     color: @base;
 }

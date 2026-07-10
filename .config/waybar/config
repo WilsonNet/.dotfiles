@@ -18,7 +18,7 @@
     "pulseaudio",
     "custom/timer",
     "network",
-    "power-profiles-daemon",
+    "custom/power-mode",
     "cpu",
     "memory",
     "temperature",
@@ -150,19 +150,19 @@
     "battery#bat2": {
       "bat": "BAT2"
     },
-    "power-profiles-daemon": {
-      "format": "{icon}",
-      "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
-      "tooltip": true,
+    "custom/power-mode": {
+      "exec": "power-mode get",
+      "return-type": "json",
+      "format": "{icon} {text}",
       "format-icons": {
-        "default": "",
-        "performance": "",
-        "balanced": "",
-        "power-saver": ""
+        "performance": "",
+        "balance_performance": "",
+        "balance_power": "",
+        "power": ""
       },
-      "on-click": "powerprofilesctl set performance",
-      "on-click-middle": "powerprofilesctl set balanced",
-      "on-click-right": "powerprofilesctl set power-saver"
+      "on-click": "power-mode next",
+      "tooltip": true,
+      "tooltip-format": "Power mode: {}\nClick to cycle"
     },
     "network": {
       // "interface": "wlp2*", // (Optional) To force the use of this interface

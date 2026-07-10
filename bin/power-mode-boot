@@ -1,0 +1,10 @@
+#!/bin/bash
+
+POLICY_PATH="/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference"
+AC_PATH="/sys/class/power_supply/ACAD/online"
+
+if [ -f "$AC_PATH" ] && [ "$(cat "$AC_PATH")" = "1" ]; then
+    echo "performance" | sudo tee "$POLICY_PATH" > /dev/null
+elif [ -f "$POLICY_PATH" ]; then
+    echo "balance_performance" | sudo tee "$POLICY_PATH" > /dev/null
+fi
