@@ -2,10 +2,21 @@
 
 POLICY_PATH="/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference"
 
+icon() {
+    case "$1" in
+        "performance")          echo "⚡" ;;
+        "balance_performance")  echo "🔥" ;;
+        "balance_power")        echo "🔋" ;;
+        "power")                echo "🍃" ;;
+        *)                      echo "⚙" ;;
+    esac
+}
+
 case "$1" in
     "get")
         value=$(cat "$POLICY_PATH")
-        echo "{\"text\": \"$value\", \"class\": \"$value\"}"
+        icn=$(icon "$value")
+        echo "{\"text\": \"$icn\", \"class\": \"$value\", \"tooltip\": \"Power mode: $value\"}"
         ;;
     "next")
         current=$(cat "$POLICY_PATH")
@@ -17,7 +28,8 @@ case "$1" in
             *)                      next="balance_performance" ;;
         esac
         echo "$next" | sudo tee "$POLICY_PATH" > /dev/null
-        echo "{\"text\": \"$next\", \"class\": \"$next\"}"
+        icn=$(icon "$next")
+        echo "{\"text\": \"$icn\", \"class\": \"$next\", \"tooltip\": \"Power mode: $next\"}"
         ;;
     *)
         echo "Usage: power-mode {get|next}"

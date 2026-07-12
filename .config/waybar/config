@@ -151,18 +151,12 @@
       "bat": "BAT2"
     },
     "custom/power-mode": {
-      "exec": "power-mode get",
+      "exec": "/home/wilsonn/bin/power-mode get",
       "return-type": "json",
-      "format": "{icon} {text}",
-      "format-icons": {
-        "performance": "",
-        "balance_performance": "",
-        "balance_power": "",
-        "power": ""
-      },
-      "on-click": "power-mode next",
-      "tooltip": true,
-      "tooltip-format": "Power mode: {}\nClick to cycle"
+      "interval": 1,
+      "format": "{text}",
+      "on-click": "/home/wilsonn/bin/power-mode next",
+      "tooltip": true
     },
     "network": {
       // "interface": "wlp2*", // (Optional) To force the use of this interface
