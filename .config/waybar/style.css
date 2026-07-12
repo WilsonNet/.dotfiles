@@ -25,8 +25,7 @@
 }
 
 window#waybar {
-    background-color: @base;
-    border-bottom: 2px solid @surface1;
+    background-color: alpha(@base, 0.7);
     color: @text;
 }
 
