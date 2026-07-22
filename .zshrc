@@ -76,13 +76,12 @@ esac
 if [[ -d "$HOME/.deno" ]]; then
     export DENO_INSTALL="$HOME/.deno"
     export PATH="$DENO_INSTALL/bin:$PATH"
-    . "$HOME/.deno/env"
+    [[ -f "$HOME/.deno/env" ]] && . "$HOME/.deno/env"
 fi
 
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
-. "$HOME/.deno/env"
 
 
 # Added by Antigravity CLI installer
