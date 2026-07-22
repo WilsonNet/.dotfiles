@@ -45,7 +45,18 @@ alias invim='nvim $(fd --type dir | fzf)'
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
 
+# brew - needs to be before asdf since asdf is installed via brew
+if [[ "$(uname)" == "Darwin" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
+fi
+
 eval "$(mcfly init zsh)"
+# rbenv
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init - zsh)"
+
 # asdf
 export ASDF_DATA_DIR="$HOME/.asdf"
 export PATH="$ASDF_DATA_DIR/shims:$PATH"
@@ -71,3 +82,8 @@ fi
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
+. "$HOME/.deno/env"
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/wilsonneto/.local/bin:$PATH"
