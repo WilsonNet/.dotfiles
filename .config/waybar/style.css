@@ -276,15 +276,13 @@ label:focus {
 
 #idle_inhibitor {
     background-color: alpha(@surface0, 0.6);
-    min-width: 30px;
     font-size: 16px;
-	padding-left: 2px;
+    padding: 0 10px;
 }
 
 #idle_inhibitor.activated {
     background-color: alpha(@rosewater, 0.75);
     color: @base;
-    min-width: 30px;
     font-size: 16px;
 }
 

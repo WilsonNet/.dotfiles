@@ -14,10 +14,10 @@
     ],
     "modules-right": [
       "mpd",
-    "idle_inhibitor",
     "pulseaudio",
     "custom/timer",
     "network",
+    "idle_inhibitor",
     "custom/power-mode",
     "cpu",
     "memory",
@@ -99,8 +99,8 @@
     "idle_inhibitor": {
       "format": "{icon}",
       "format-icons": {
-        "activated": "",
-        "deactivated": ""
+        "activated": "☕",
+        "deactivated": "💤"
       }
     },
     "tray": {
