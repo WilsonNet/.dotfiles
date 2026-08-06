@@ -54,8 +54,10 @@ fi
 
 eval "$(mcfly init zsh)"
 # rbenv
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init - zsh)"
+if [[ -d "$HOME/.rbenv" ]]; then
+  export PATH="$HOME/.rbenv/bin:$PATH"
+  eval "$(rbenv init - zsh)"
+fi
 
 # asdf
 export ASDF_DATA_DIR="$HOME/.asdf"
