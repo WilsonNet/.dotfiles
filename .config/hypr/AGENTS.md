@@ -20,9 +20,16 @@ The wiki documents "Latest git" by default and is versioned — always check the
 ## Testing Config Changes (feedback loop)
 
 1. **Syntax check**: `luac -p hyprland.lua`
-2. **Full validation without running**: `Hyprland --config ~/.config/hypr/hyprland.lua --verify-config` → prints `config ok` or errors.
-3. **Hot reload**: saving the file reloads the live session; then `hyprctl configerrors` (should be empty) and `hyprctl monitors` / `hyprctl binds` / `hyprctl getoption <key>` verify the result.
-4. **Runtime experimentation** (live session, no reload needed): `hyprctl eval '<lua code>'` runs Lua in the live config manager (e.g. `hyprctl eval 'hl.monitor({output = "eDP-1", disabled = true})'`). `hyprctl repl` starts an interactive REPL.
+2. **Hot reload**: saving the file reloads the live session (and fires `config.reloaded`); then `hyprctl configerrors` (should be empty) and `hyprctl monitors` / `hyprctl binds` / `hyprctl getoption <key>` verify the result.
+3. **Runtime experimentation** (live session, no reload needed): `hyprctl eval '<lua code>'` runs Lua in the live config manager (e.g. `hyprctl eval 'hl.monitor({output = "eDP-1", disabled = true})'`). `hyprctl repl` starts an interactive REPL.
+4. **Testing this config's monitor logic without touching hardware**: the monitor functions are globals on purpose, so you can drive the exact event code path from the shell:
+   ```sh
+   hyprctl eval 'apply_monitors()'                                        # run the apply logic directly
+   hyprctl eval 'monitor_connected = function(sub) return false end; apply_monitors()'  # simulate unplug
+   hyprctl reload                                                         # restores real functions after monkey-patching
+   ```
+   Verify with `pgrep -x waybar` (PID should change — waybar is restarted on every apply) and `hyprctl layers`.
+5. **Do NOT use `Hyprland --verify-config` on this config**: it executes the config in a fresh instance *including event handlers*, so side effects (`hl.exec_cmd` calls like `pkill waybar`) run against the live system. Use `luac -p` + hot-reload instead.
 
 ## Key Gotchas
 
@@ -32,13 +39,15 @@ The wiki documents "Latest git" by default and is versioned — always check the
 - `hl.exec_cmd()` (autostart) spawns async; `hl.dsp.exec_cmd()` is the dispatcher form used in binds.
 - There is no Lua event for the lid — use `hl.bind("switch:on:Lid Switch", ...)` / `switch:off` binds, or read `/proc/acpi/button/lid/LID0/state`.
 - `monitor.added` / `monitor.removed` callbacks receive a `Monitor` object (live C++ state; fields like `.description`, `.name`, `.disabled`).
+- Waybar (and most bars) only spawn on the monitors that existed at launch — restart it after any monitor layout change or it will be missing from newly-enabled outputs.
+- `waybar_timer` is NOT the waybar spawner: it's a pomodoro/timer DBus daemon used by the `custom/timer` waybar module. Spawn waybar as plain `waybar`.
 - `require()` splits configs into separate error-protected scopes; `require("nonexistent")` will kill the main config (wrap in `pcall` if needed).
 
 ## This Config's Structure
 
 `hyprland.lua` sections: monitor profiles + lid/hotplug management (native Lua, no kanshi or scripts), autostart (`hl.on("hyprland.start")`), `hl.env`, look & feel (`hl.config`, curves, animations), input, keybinds (`hl.bind` + `hl.dsp.*`, incl. group/switch/streaming binds), window rules.
 
-- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile from `hl.get_monitors()` descriptions, checks lid state, and applies via `hl.monitor()`. Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer, and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode (`STREAMING` flag).
+- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile from `hl.get_monitors()` descriptions, checks lid state, applies via `hl.monitor()`, then restarts waybar. Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer, and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode (`STREAMING` flag).
 - Behavior: lid closed → eDP-1 disabled, external only; lid open + external → both monitors; no external → eDP-1 only.
 - Any new display setups must be added to `PROFILES` and the detection strings in `apply_monitors()` (`monitor_connected(...)` matches on monitor description substrings).
 

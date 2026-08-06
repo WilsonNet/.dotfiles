@@ -19,7 +19,13 @@
 --   * Lid open:         eDP-1 + external (two monitors)
 --   * No external:      eDP-1 only
 
-local PROFILES = {
+-- NOTE: these are globals (not locals) on purpose: it lets you exercise the
+-- exact runtime code paths from a shell via `hyprctl eval`, e.g.:
+--   hyprctl eval 'apply_monitors()'
+--   hyprctl eval 'monitor_connected = function(sub) return false end; apply_monitors()'
+--   hyprctl reload   # restores the real functions after monkey-patching
+
+PROFILES = {
     eDP      = { output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6 },
     sp       = { output = "desc:LG Electronics LG ULTRAWIDE 209AZPU4U744", mode = "3440x1440@84.96", position = "auto", scale = 1.333333 },
     sp16_9   = { output = "desc:LG Electronics LG ULTRAWIDE 209AZPU4U744", mode = "2560x1440@120",   position = "auto", scale = 1.333333 },
@@ -27,9 +33,9 @@ local PROFILES = {
     ctb16_9  = { output = "desc:LG Electronics LG HDR WFHD 0x01010101",     mode = "1920x1080@60",    position = "auto", scale = 1.333333 },
 }
 
-local STREAMING = false
+STREAMING = false
 
-local function monitor_connected(sub)
+function monitor_connected(sub)
     for _, m in ipairs(hl.get_monitors()) do
         if m.description and m.description:find(sub, 1, true) then
             return true
@@ -38,7 +44,7 @@ local function monitor_connected(sub)
     return false
 end
 
-local function lid_closed()
+function lid_closed()
     local f = io.open("/proc/acpi/button/lid/LID0/state", "r")
     if not f then
         return false
@@ -48,9 +54,18 @@ local function lid_closed()
     return s ~= nil and s:find("closed") ~= nil
 end
 
+-- Waybar doesn't follow monitor changes on its own (it only spawns on the
+-- outputs that existed at launch), so restart it whenever the layout changes.
+function restart_waybar()
+    hl.exec_cmd("pkill waybar")
+    hl.timer(function()
+        hl.exec_cmd("waybar")
+    end, { timeout = 400, type = "oneshot" })
+end
+
 -- hl.monitor() merges with the existing rule for an output, so `disabled`
 -- must always be passed explicitly on both branches.
-local function apply_monitors()
+function apply_monitors()
     local ext
     if monitor_connected("LG ULTRAWIDE") then
         ext = STREAMING and PROFILES.sp16_9 or PROFILES.sp
@@ -68,6 +83,8 @@ local function apply_monitors()
     else
         hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6, disabled = false })
     end
+
+    restart_waybar()
 end
 
 -- Re-apply on hotplug, after reloads, and shortly after startup
