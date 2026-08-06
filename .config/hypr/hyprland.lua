@@ -11,13 +11,73 @@
 ------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
--- Monitor configuration is now managed by kanshi
--- ~/.config/kanshi/config contains profiles for:
--- - laptop only (eDP-1)
--- - São Paulo (LG Ultrawide)
--- - Curitiba (LG HDR WFHD)
---
--- kanshi automatically detects connected displays and applies the matching profile
+-- Display management is done natively in Lua (no kanshi / bash scripts):
+--   * São Paulo office: LG ULTRAWIDE (3440x1440) - working profile
+--   * Curitiba office:  LG HDR WFHD   (2560x1080) - working profile
+--   * Streaming:        16:9 modes on the connected external (SUPER + O)
+--   * Lid closed:       eDP-1 disabled, external monitor only
+--   * Lid open:         eDP-1 + external (two monitors)
+--   * No external:      eDP-1 only
+
+local PROFILES = {
+    eDP      = { output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6 },
+    sp       = { output = "desc:LG Electronics LG ULTRAWIDE 209AZPU4U744", mode = "3440x1440@84.96", position = "auto", scale = 1.333333 },
+    sp16_9   = { output = "desc:LG Electronics LG ULTRAWIDE 209AZPU4U744", mode = "2560x1440@120",   position = "auto", scale = 1.333333 },
+    ctb      = { output = "desc:LG Electronics LG HDR WFHD 0x01010101",     mode = "2560x1080@74.99", position = "auto", scale = 1.333333 },
+    ctb16_9  = { output = "desc:LG Electronics LG HDR WFHD 0x01010101",     mode = "1920x1080@60",    position = "auto", scale = 1.333333 },
+}
+
+local STREAMING = false
+
+local function monitor_connected(sub)
+    for _, m in ipairs(hl.get_monitors()) do
+        if m.description and m.description:find(sub, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+local function lid_closed()
+    local f = io.open("/proc/acpi/button/lid/LID0/state", "r")
+    if not f then
+        return false
+    end
+    local s = f:read("*a")
+    f:close()
+    return s ~= nil and s:find("closed") ~= nil
+end
+
+-- hl.monitor() merges with the existing rule for an output, so `disabled`
+-- must always be passed explicitly on both branches.
+local function apply_monitors()
+    local ext
+    if monitor_connected("LG ULTRAWIDE") then
+        ext = STREAMING and PROFILES.sp16_9 or PROFILES.sp
+    elseif monitor_connected("LG HDR WFHD") then
+        ext = STREAMING and PROFILES.ctb16_9 or PROFILES.ctb
+    end
+
+    if ext then
+        hl.monitor(ext)
+        if lid_closed() then
+            hl.monitor({ output = "eDP-1", disabled = true })
+        else
+            hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6, disabled = false })
+        end
+    else
+        hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6, disabled = false })
+    end
+end
+
+-- Re-apply on hotplug, after reloads, and shortly after startup
+-- (monitors may still be enumerating when hyprland.start fires).
+hl.on("monitor.added", apply_monitors)
+hl.on("monitor.removed", apply_monitors)
+hl.on("config.reloaded", apply_monitors)
+hl.on("hyprland.start", function()
+    hl.timer(apply_monitors, { timeout = 1500, type = "oneshot" })
+end)
 
 
 ---------------------
@@ -38,11 +98,9 @@ local menu        = "wofi --show drun"
 -- hl.exec_cmd() spawns an async process, no need for "& disown"
 hl.on("hyprland.start", function()
   hl.exec_cmd("waybar_timer serve")
-  hl.exec_cmd("~/.config/hypr/scripts/monitor_manager.sh")
   hl.exec_cmd("wlsunset -l -23.606985318693937 -L -46.64212671937147 -t 4500 -T 6500")
   hl.exec_cmd("fcitx5")
   hl.exec_cmd("hypridle")
-  hl.exec_cmd("~/bin/check_lid_on_startup.sh")
   hl.exec_cmd("~/bin/power-mode-boot")
 end)
 
@@ -274,11 +332,16 @@ hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tr
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 
--- Trigger when the lid is closed (only disable eDP-1 if external monitor is connected)
-hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd("bash -c 'if hyprctl monitors all | grep -q \"LG Electronics\"; then hyprctl keyword monitor \"eDP-1, disable\"; fi'"), { locked = true })
+-- Toggle streaming 16:9 mode on the external monitor
+hl.bind(mainMod .. " + O", function()
+    STREAMING = not STREAMING
+    hl.notification.create({ text = STREAMING and "External monitor: 16:9 streaming mode" or "External monitor: native mode", timeout = 3000, icon = "ok" })
+    apply_monitors()
+end)
 
--- Trigger when the lid is opened (re-evaluate full display setup)
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("~/.config/hypr/scripts/monitor_manager.sh --lid-open"), { locked = true })
+-- Lid switch: closed -> external only, open -> both monitors
+hl.bind("switch:on:Lid Switch", apply_monitors, { locked = true })
+hl.bind("switch:off:Lid Switch", apply_monitors, { locked = true })
 
 
 --------------------------------
