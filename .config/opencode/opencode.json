@@ -21,7 +21,6 @@
 		"websearch": "allow"
 	},
 	"plugin": [
-		"@mohak34/opencode-notifier@latest",
 		"./plugins/rtk.ts"
 	],
 	"agent": {
