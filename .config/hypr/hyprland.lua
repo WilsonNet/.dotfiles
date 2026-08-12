@@ -54,23 +54,13 @@ function lid_closed()
     return s ~= nil and s:find("closed") ~= nil
 end
 
--- Waybar doesn't follow monitor changes on its own (it only spawns on the
--- outputs that existed at launch), so restart it whenever the layout changes.
--- Resume from suspend / hotplug can fire several monitor and lid events in a
--- row, each calling this. Coalesce them: cancel any pending spawn timer and
--- only keep one, so at most one waybar is ever spawned per burst.
-local waybar_restart_timer
-
-function restart_waybar()
-    if waybar_restart_timer then
-        waybar_restart_timer:set_enabled(false)
-    end
-    hl.exec_cmd("pkill waybar")
-    waybar_restart_timer = hl.timer(function()
-        waybar_restart_timer = nil
-        hl.exec_cmd("waybar")
-    end, { timeout = 400, type = "oneshot" })
-end
+-- Waybar 0.15+ handles monitor hotplug natively (it tracks Gdk monitor
+-- add/remove and creates/removes bars for the outputs in its config), so we
+-- spawn it once at startup and never touch it on monitor/lid changes.
+-- Restarting it (kill + delayed respawn) caused duplicate bars whenever
+-- several monitor events fired in a row (e.g. resume from suspend), and also
+-- killed the native hotplug handling.
+-- If you edit the waybar config, reload it in-place with: pkill -SIGUSR2 waybar
 
 -- hl.monitor() merges with the existing rule for an output, so `disabled`
 -- must always be passed explicitly on both branches.
@@ -92,8 +82,6 @@ function apply_monitors()
     else
         hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6, disabled = false })
     end
-
-    restart_waybar()
 end
 
 -- Re-apply on hotplug, after reloads, and shortly after startup
@@ -102,7 +90,10 @@ hl.on("monitor.added", apply_monitors)
 hl.on("monitor.removed", apply_monitors)
 hl.on("config.reloaded", apply_monitors)
 hl.on("hyprland.start", function()
-    hl.timer(apply_monitors, { timeout = 1500, type = "oneshot" })
+    hl.timer(function()
+        apply_monitors()
+        hl.exec_cmd("waybar")
+    end, { timeout = 1500, type = "oneshot" })
 end)
 
 
@@ -415,3 +406,5 @@ hl.window_rule({
     match            = { class = "^(Ardour.*)$" },
     no_initial_focus = true,
 })
+-- reload-test-1
+-- reload-test-2

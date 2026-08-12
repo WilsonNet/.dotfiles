@@ -28,8 +28,8 @@ The wiki documents "Latest git" by default and is versioned — always check the
    hyprctl eval 'monitor_connected = function(sub) return false end; apply_monitors()'  # simulate unplug
    hyprctl reload                                                         # restores real functions after monkey-patching
    ```
-   Verify with `pgrep -x waybar` (PID should change — waybar is restarted on every apply) and `hyprctl layers`.
-5. **Do NOT use `Hyprland --verify-config` on this config**: it executes the config in a fresh instance *including event handlers*, so side effects (`hl.exec_cmd` calls like `pkill waybar`) run against the live system. Use `luac -p` + hot-reload instead.
+   Verify with `pgrep -x waybar` (PID should NOT change — waybar handles hotplug natively) and `hyprctl layers`.
+5. **Do NOT use `Hyprland --verify-config` on this config**: it executes the config in a fresh instance *including event handlers*, so side effects (`hl.exec_cmd` calls) run against the live system. Use `luac -p` + hot-reload instead.
 
 ## Key Gotchas
 
@@ -39,7 +39,7 @@ The wiki documents "Latest git" by default and is versioned — always check the
 - `hl.exec_cmd()` (autostart) spawns async; `hl.dsp.exec_cmd()` is the dispatcher form used in binds.
 - There is no Lua event for the lid — use `hl.bind("switch:on:Lid Switch", ...)` / `switch:off` binds, or read `/proc/acpi/button/lid/LID0/state`.
 - `monitor.added` / `monitor.removed` callbacks receive a `Monitor` object (live C++ state; fields like `.description`, `.name`, `.disabled`).
-- Waybar (and most bars) only spawn on the monitors that existed at launch — restart it after any monitor layout change or it will be missing from newly-enabled outputs.
+- Waybar 0.15+ tracks Gdk monitor add/remove and creates/removes its bars natively (see `handleMonitorAdded`/`handleMonitorRemoved` in `src/client.cpp`, fixed in the 0.15 line) — do NOT kill/restart it on monitor changes: that caused duplicate bars whenever several monitor events fired in a row (resume). It's spawned once at startup, after `apply_monitors()`; reload its config in-place with `pkill -SIGUSR2 waybar` (in-process reload since waybar's signal-handling rewrite, Alexays/Waybar#3669).
 - `waybar_timer` is NOT the waybar spawner: it's a pomodoro/timer DBus daemon used by the `custom/timer` waybar module. Spawn waybar as plain `waybar`.
 - `require()` splits configs into separate error-protected scopes; `require("nonexistent")` will kill the main config (wrap in `pcall` if needed).
 
@@ -47,7 +47,7 @@ The wiki documents "Latest git" by default and is versioned — always check the
 
 `hyprland.lua` sections: monitor profiles + lid/hotplug management (native Lua, no kanshi or scripts), autostart (`hl.on("hyprland.start")`), `hl.env`, look & feel (`hl.config`, curves, animations), input, keybinds (`hl.bind` + `hl.dsp.*`, incl. group/switch/streaming binds), window rules.
 
-- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile from `hl.get_monitors()` descriptions, checks lid state, applies via `hl.monitor()`, then restarts waybar. Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer, and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode (`STREAMING` flag).
+- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile from `hl.get_monitors()` descriptions, checks lid state, applies via `hl.monitor()`. Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer (which also spawns waybar once), and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode (`STREAMING` flag). Waybar is never restarted on these events — it handles hotplug natively.
 - Behavior: lid closed → eDP-1 disabled, external only; lid open + external → both monitors; no external → eDP-1 only.
 - Any new display setups must be added to `PROFILES` and the detection strings in `apply_monitors()` (`monitor_connected(...)` matches on monitor description substrings).
 
