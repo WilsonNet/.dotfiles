@@ -56,9 +56,18 @@ end
 
 -- Waybar doesn't follow monitor changes on its own (it only spawns on the
 -- outputs that existed at launch), so restart it whenever the layout changes.
+-- Resume from suspend / hotplug can fire several monitor and lid events in a
+-- row, each calling this. Coalesce them: cancel any pending spawn timer and
+-- only keep one, so at most one waybar is ever spawned per burst.
+local waybar_restart_timer
+
 function restart_waybar()
+    if waybar_restart_timer then
+        waybar_restart_timer:set_enabled(false)
+    end
     hl.exec_cmd("pkill waybar")
-    hl.timer(function()
+    waybar_restart_timer = hl.timer(function()
+        waybar_restart_timer = nil
         hl.exec_cmd("waybar")
     end, { timeout = 400, type = "oneshot" })
 end
