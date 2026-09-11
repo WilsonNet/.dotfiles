@@ -34,7 +34,7 @@ Singleton {
     readonly property int pillPadding: 10
     readonly property int pillSpacing: 4
 
-    readonly property int fontSize: 16
+    readonly property int fontSize: 14
     readonly property string fontFamily: "Font Awesome 7 Free Solid"
 
     function alpha(c, a) {

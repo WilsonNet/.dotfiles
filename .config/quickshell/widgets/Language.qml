@@ -8,11 +8,9 @@ Pill {
     tooltip: HyprDevices.activeKeymap
 
     Text {
-        text: HyprDevices.activeKeymap
+        text: HyprDevices.shortKeymap
         color: Theme.base
         font.pixelSize: Theme.fontSize
         font.family: Theme.fontFamily
-        elide: Text.ElideRight
-        width: Math.min(implicitWidth, 220)
     }
 }

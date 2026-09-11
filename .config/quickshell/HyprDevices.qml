@@ -11,6 +11,9 @@ Singleton {
     property bool numLock: false
     property string activeKeymap: ""
     property string layout: ""
+    property string variant: ""
+
+    readonly property string shortKeymap: layout ? (variant.length > 0 ? layout + "-" + variant : layout) : activeKeymap
 
     function parse(text) {
         try {
@@ -34,11 +37,27 @@ Singleton {
         }
     }
 
+    Process {
+        id: variantProc
+        command: ["hyprctl", "getoption", "input:kb_variant", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root.variant = JSON.parse(this.text).str || "";
+                } catch (e) {
+                }
+            }
+        }
+    }
+
     Timer {
         interval: 1000
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: proc.running = true
+        onTriggered: {
+            proc.running = true;
+            variantProc.running = true;
+        }
     }
 }
