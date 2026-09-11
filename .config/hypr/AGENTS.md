@@ -71,6 +71,7 @@ Quickshell 0.3 gotchas hit here:
 - Idle inhibition: `Quickshell.Wayland.IdleInhibitor { window: <PanelWindow>; enabled: bool }` — respected by hypridle (Waybar's DBus ScreenSaver variant was not).
 - Right-click tray menus are rendered in-shell from `QsMenuOpener` with submenu drill-down (`QsMenuEntry.triggered()` on leaves; `menu` on parents feeds a new opener).
 - The mpd module was replaced by an MPRIS `Media` widget (mpd is installed but never running and has no MPRIS bridge).
+- For the full development workflow, API gotchas, and the test harness, see the `quickshell` opencode skill (`~/.config/opencode/skills/quickshell`, source of truth in `~/.dotfiles/.config/opencode/skills/quickshell`).
 
 ## Checking for Configuration Errors
 
