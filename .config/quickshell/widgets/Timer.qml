@@ -13,6 +13,7 @@ Pill {
     property real remainingSeconds: 0
     property real totalSeconds: 0
     property int customMinutes: Settings.customTimerMinutes
+    readonly property int defaultMinutes: 10
 
     readonly property bool running: state === "running"
     readonly property bool paused: state === "paused"
@@ -36,7 +37,7 @@ Pill {
     bg: visual ? Theme.alpha(Theme.surface0, 0.6) : Theme.alpha(Theme.yellow, 0.75)
     interactive: true
     tooltip: state === "standby"
-        ? "No timer set \u00B7 right-click for options"
+        ? `No timer set \u00B7 left-click starts ${defaultMinutes} min \u00B7 right-click for options`
         : hookTooltip
 
     function handleHook(line) {
@@ -96,7 +97,7 @@ Pill {
 
     function setCustom(minutes) {
         customMinutes = Math.max(1, Math.min(180, Math.round(minutes)));
-        Settings.customTimerMinutes = customMinutes;
+        Settings.setCustomTimerMinutes(customMinutes);
     }
 
     Process {
@@ -211,13 +212,15 @@ Pill {
         }
     }
 
-    onClicked: root.startTimer(10)
+    onClicked: root.startTimer(root.defaultMinutes)
     onMiddleClicked: Quickshell.execDetached(["/home/wilsonn/bin/waybar_timer", "cancel"])
     onRightClicked: {
-        if (root.state === "standby")
+        if (root.state === "standby") {
+            Tooltip.hide(root);
             optionsPopup.open = !optionsPopup.open;
-        else
+        } else {
             Quickshell.execDetached(["/home/wilsonn/bin/waybar_timer", "togglepause"]);
+        }
     }
     onScrolled: (delta) => {
         if (delta > 0)
@@ -405,7 +408,7 @@ Pill {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: Settings.visualTimer = !Settings.visualTimer
+                        onClicked: Settings.setVisualTimer(!Settings.visualTimer)
                     }
                 }
             }
