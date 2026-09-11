@@ -196,6 +196,16 @@ Singleton {
     property alias visualTimer: adapter.visualTimer
 
     readonly property string settingsPath: Quickshell.stateDir + "/timer-settings.json"
+
+    // Write explicitly on user action. Do NOT use `onAdapterUpdated:
+    // writeAdapter()`: on config reload the adapter can emit defaults before
+    // the file has loaded, overwriting saved values.
+    function setVisualTimer(value) {
+        if (adapter.visualTimer === value) return;
+        adapter.visualTimer = value;
+        settingsFile.writeAdapter();
+    }
+
     Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", Quickshell.stateDir])
 
     FileView {
@@ -207,7 +217,6 @@ Singleton {
         onFileChanged: reload()
         onLoaded: blockWrites = false
         onLoadFailed: blockWrites = false
-        onAdapterUpdated: writeAdapter()
 
         adapter: JsonAdapter {
             id: adapter

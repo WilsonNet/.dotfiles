@@ -1,5 +1,7 @@
 # Hyprland Configuration Notes for AI Agents
 
+> Scope: this folder owns Hyprland **and its Quickshell bar** (`~/.config/quickshell`). Before any bar/widget/QML work, read the `quickshell` opencode skill (`~/.config/opencode/skills/quickshell`; source of truth in `~/.dotfiles/.config/opencode/skills/quickshell`). It holds the dev loop, verified API gotchas, and the test harness. See "Quickshell Bar" below for the config map.
+
 ## Config Format
 
 Hyprland config is now **Lua** (`hyprland.lua`). The old hyprlang `.conf` format was **deprecated in Hyprland 0.55 and dropped after 0.56** — do NOT write `.conf` configs or hyprlang syntax. The example config lives at `https://github.com/hyprwm/Hyprland/blob/main/example/hyprland.lua`.
@@ -53,6 +55,8 @@ The wiki documents "Latest git" by default and is versioned — always check the
 
 ## Quickshell Bar (replaced Waybar in Sep 2026)
 
+**Read the `quickshell` opencode skill first** (`~/.config/opencode/skills/quickshell`; source of truth in `~/.dotfiles/.config/opencode/skills/quickshell`) — dev loop, verified API gotchas, and the test harness live there.
+
 Config: `~/.config/quickshell` → `~/.dotfiles/.config/quickshell` (symlink).
 
 - `shell.qml` (ShellRoot, Variants per screen, `debug` IPC target), `Bar.qml` (PanelWindow + 3 sections + shared tooltip window), `Pill.qml` (shared pill: bg, hover underline, tooltip, click/scroll signals), `BarPopup.qml` (anchored popup + HyprlandFocusGrab), `Tooltip.qml` (singleton backing one shared popup; clock calendar), `HyprDevices.qml` (polls `hyprctl devices -j` 1/s for caps/num/layout), `widgets/*.qml` (one file per module).
@@ -71,7 +75,7 @@ Quickshell 0.3 gotchas hit here:
 - Idle inhibition: `Quickshell.Wayland.IdleInhibitor { window: <PanelWindow>; enabled: bool }` — respected by hypridle (Waybar's DBus ScreenSaver variant was not).
 - Right-click tray menus are rendered in-shell from `QsMenuOpener` with submenu drill-down (`QsMenuEntry.triggered()` on leaves; `menu` on parents feeds a new opener).
 - The mpd module was replaced by an MPRIS `Media` widget (mpd is installed but never running and has no MPRIS bridge).
-- For the full development workflow, API gotchas, and the test harness, see the `quickshell` opencode skill (`~/.config/opencode/skills/quickshell`, source of truth in `~/.dotfiles/.config/opencode/skills/quickshell`).
+- The timer has a right-click options popup (presets, custom stepper) and a persisted "visual only" mode (`Settings.qml`); settings live in `Quickshell.stateDir` (`~/.local/state/quickshell/by-shell/<id>/timer-settings.json`).
 
 ## Checking for Configuration Errors
 
