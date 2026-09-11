@@ -65,6 +65,13 @@ pixels use `input = physical / 2.6667` (this monitor's scale). Verify with
 Hover needs ~0.5-1 s before the tooltip/underline appears. Drop coordinates
 from a pill found by color analysis (PIL) rather than eyeballing.
 
+Popup buttons: a popup anchors to its widget and its x shifts with the widget's
+width (e.g. the timer pill grows in visual mode), so hardcoded click
+coordinates go stale after UI changes. Locate the green Start button (exact
+`#a6e3a1`) in a screenshot and compute neighboring buttons from it, or verify
+each click's effect immediately (e.g. the `waybar_timer` state or the settings
+file).
+
 ## 5. Ground truth for widget values
 
 | Widget | Command |

@@ -179,3 +179,56 @@ Text { text: toplevel ? toplevel.title : "" }
 
 SystemClock { id: clock; precision: SystemClock.Minutes }        // clock.date, Qt.formatDateTime(...)
 ```
+
+## Persisted settings (survives restarts)
+
+`PersistentProperties` only survives reloads. For real persistence, back a
+singleton with a `FileView` + `JsonAdapter` in `Quickshell.stateDir`:
+
+```qml
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+
+Singleton {
+    id: root
+    property alias visualTimer: adapter.visualTimer
+
+    readonly property string settingsPath: Quickshell.stateDir + "/timer-settings.json"
+    Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", Quickshell.stateDir])
+
+    FileView {
+        id: settingsFile
+        path: root.settingsPath
+        blockWrites: true          // don't overwrite the file before it loads
+        printErrors: false         // first run: file doesn't exist yet
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: blockWrites = false
+        onLoadFailed: blockWrites = false
+        onAdapterUpdated: writeAdapter()
+
+        adapter: JsonAdapter {
+            id: adapter
+            property bool visualTimer: false
+            property int customTimerMinutes: 25
+        }
+    }
+}
+```
+
+## waybar_timer hook (timer data source)
+
+`waybar_timer hook` streams one JSON line per second while a timer exists:
+
+```json
+{"text":"3","alt":"running","tooltip":"Timer expires at 22:57","class":"timer"}
+```
+
+- `alt`: `standby` | `running` | `paused`
+- `text`: remaining **ceil** minutes; a change from `m` to `m-1` means exactly
+  `(m-1)*60` seconds remain, so it can resync a locally decremented countdown.
+- `tooltip`: "Timer expires at HH:MM" (minute precision) or "Timer paused".
+- Commands: `new <minutes> [command]`, `increase <secs>`, `decrease <secs>`,
+  `togglepause`, `cancel`.

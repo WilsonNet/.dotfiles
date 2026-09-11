@@ -73,6 +73,8 @@ If a file crashes qmllint, bisect for these two before blaming the config.
 - `Process` streams: `stdio`-style `SplitParser { onRead: (line) => ... }` for line streams (`waybar_timer hook`), `StdioCollector { onStreamFinished: ... }` for one-shot commands. `this.text` inside the collector handlers.
 - `Quickshell.execDetached(["cmd", "arg"])` for fire-and-forget; use `["sh", "-c", "..."]` when shell features (env vars, `||`) are needed.
 - Restarting the shell on monitor changes is unnecessary and leaves stale layers: `Variants` over `Quickshell.screens` creates/removes a `PanelWindow` per screen automatically.
+- `PersistentProperties` only persists across **config reloads**, not across process restarts (the docs phrase it as surviving "a reload"). For real settings persistence use a `FileView` whose `adapter` is a `JsonAdapter`, call `writeAdapter()` from `onAdapterUpdated`, and release `blockWrites` after load; write under `Quickshell.stateDir` (e.g. `~/.local/state/quickshell/by-shell/<id>/`). See `Settings.qml` + `references/api-patterns.md`.
+- **Bar PopupWindows cannot take keyboard input here.** `grabFocus: true` conflicts with `HyprlandFocusGrab` (the popup disappears), and with a keyboard grab the compositor dismisses the popup on the first key because the parent layer surface isn't keyboard-interactive. Even `ydotool`-injected keys close it. Omarchy works around this with a full-screen layer-shell `KeyboardPanel` (`WlrLayershell.keyboardFocus` OnDemand/Exclusive). For bar popups, design click-only UIs (buttons/steppers/wheel); do not rely on `TextInput`.
 
 ## Testing (summary)
 
