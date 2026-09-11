@@ -28,28 +28,49 @@ The wiki documents "Latest git" by default and is versioned — always check the
    hyprctl eval 'monitor_connected = function(sub) return false end; apply_monitors()'  # simulate unplug
    hyprctl reload                                                         # restores real functions after monkey-patching
    ```
-   Verify with `pgrep -x waybar` (PID should NOT change — waybar handles hotplug natively) and `hyprctl layers`.
+   Verify with `pgrep -x quickshell` (PID should NOT change — the shell creates one PanelWindow per screen and handles hotplug natively) and `hyprctl layers`.
 5. **Do NOT use `Hyprland --verify-config` on this config**: it executes the config in a fresh instance *including event handlers*, so side effects (`hl.exec_cmd` calls) run against the live system. Use `luac -p` + hot-reload instead.
 
 ## Key Gotchas
 
 - `hyprctl keyword` does **NOT** work with the Lua config manager ("keyword can't work with non-legacy parsers. Use eval."). Use `hyprctl eval '...'` instead.
-- `hyprctl dispatch` is a shorthand for `hl.dispatch(...)` — old hyprlang dispatcher strings (e.g. `moveworkspacetomonitor`) don't work; use `hl.dsp.*` Lua dispatchers.
+- `hyprctl dispatch` is a shorthand for `hl.dispatch(...)` — old hyprlang dispatcher strings (e.g. `moveworkspacetomonitor`, and the old bare `exit`/`quit`/`kill`) don't work; use `hl.dsp.*` Lua dispatchers (see `HL.DspNamespace` in `/usr/share/hypr/stubs/hl.meta.lua` for the full list). To end the session: `hyprctl eval 'hl.dsp.exit()'`. Verified on 0.56.2: `hyprctl dispatch exit` fails with "expected a dispatcher"; only the Lua-callable form works. Note `hyprctl dispatch <name>` expects a resolver name, not the old dispatcher string.
 - `hl.monitor()` **merges** with the existing rule for that output — so when toggling, always pass `disabled = true/false` explicitly on every branch, or the stale value persists.
 - `hl.exec_cmd()` (autostart) spawns async; `hl.dsp.exec_cmd()` is the dispatcher form used in binds.
 - There is no Lua event for the lid — use `hl.bind("switch:on:Lid Switch", ...)` / `switch:off` binds, or read `/proc/acpi/button/lid/LID0/state`.
 - `monitor.added` / `monitor.removed` callbacks receive a `Monitor` object (live C++ state; fields like `.description`, `.name`, `.disabled`).
-- Waybar 0.15+ tracks Gdk monitor add/remove and creates/removes its bars natively (see `handleMonitorAdded`/`handleMonitorRemoved` in `src/client.cpp`, fixed in the 0.15 line) — do NOT kill/restart it on monitor changes: that caused duplicate bars whenever several monitor events fired in a row (resume). It's spawned once at startup, after `apply_monitors()`; reload its config in-place with `pkill -SIGUSR2 waybar` (in-process reload since waybar's signal-handling rewrite, Alexays/Waybar#3669).
-- `waybar_timer` is NOT the waybar spawner: it's a pomodoro/timer DBus daemon used by the `custom/timer` waybar module. Spawn waybar as plain `waybar`.
+- Quickshell creates/removes one `PanelWindow` bar per screen reactively (`Quickshell.screens` Variants); do NOT kill/restart it on monitor changes. Config edits hot-reload on save; a hard restart is `qs kill` + `quickshell &`. Layer namespace is `quickshell` (check with `hyprctl layers`).
+- `waybar_timer` is NOT the bar spawner: it's a pomodoro/timer DBus daemon used by the quickshell `Timer` widget. Its `hook` subcommand streams status JSON.
 - `require()` splits configs into separate error-protected scopes; `require("nonexistent")` will kill the main config (wrap in `pcall` if needed).
 
 ## This Config's Structure
 
 `hyprland.lua` sections: monitor profiles + lid/hotplug management (native Lua, no kanshi or scripts), autostart (`hl.on("hyprland.start")`), `hl.env`, look & feel (`hl.config`, curves, animations), input, keybinds (`hl.bind` + `hl.dsp.*`, incl. group/switch/streaming binds), window rules.
 
-- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile from `hl.get_monitors()` descriptions, checks lid state, applies via `hl.monitor()`. Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer (which also spawns waybar once), and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode (`STREAMING` flag). Waybar is never restarted on these events — it handles hotplug natively.
+- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile from `hl.get_monitors()` descriptions, checks lid state, applies via `hl.monitor()`. Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer (which also spawns `quickshell -n` once), and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode (`STREAMING` flag). Quickshell is never restarted on these events — it handles hotplug natively.
 - Behavior: lid closed → eDP-1 disabled, external only; lid open + external → both monitors; no external → eDP-1 only.
 - Any new display setups must be added to `PROFILES` and the detection strings in `apply_monitors()` (`monitor_connected(...)` matches on monitor description substrings).
+
+## Quickshell Bar (replaced Waybar in Sep 2026)
+
+Config: `~/.config/quickshell` → `~/.dotfiles/.config/quickshell` (symlink).
+
+- `shell.qml` (ShellRoot, Variants per screen, `debug` IPC target), `Bar.qml` (PanelWindow + 3 sections + shared tooltip window), `Pill.qml` (shared pill: bg, hover underline, tooltip, click/scroll signals), `BarPopup.qml` (anchored popup + HyprlandFocusGrab), `Tooltip.qml` (singleton backing one shared popup; clock calendar), `HyprDevices.qml` (polls `hyprctl devices -j` 1/s for caps/num/layout), `widgets/*.qml` (one file per module).
+- Waybar is still installed and its config untouched in `~/.config/waybar`, but it is no longer autostarted. `hyprland.lua` runs `quickshell -n` once after `apply_monitors()`.
+
+Runtime:
+- Edits hot-reload on save; a syntax error logs an error and the previous UI survives (fix and save again).
+- Logs: `qs log` (or stderr when run in a terminal). `qs kill` stops it. Quick state dumps: `qs ipc call debug activeWindow`, `qs ipc call debug workspaces`.
+- `qmllint -I /usr/lib/qt6/qml <file>` passes clean. Two linter crashes to avoid with this Qt build (runtime is fine; qmllint exits 255): `?.` optional chaining, and `: var` return annotations on functions that return arrays.
+
+Quickshell 0.3 gotchas hit here:
+- `Text.font.families` does not exist; use `font.family`. The theme uses Font Awesome 7 first so icon codepoints resolve before fontconfig fallback (with a text font first, F001/F796 rendered as wrong glyphs/tofu).
+- `FileView.text()` is a **method**, not a property: `onLoaded: x = parseInt(file.text())`.
+- `Hyprland.activeToplevel` stays null until a focus event; use `ToplevelManager.activeToplevel` (`Quickshell.Wayland`) for the focused window title. `Hyprland.focusedWorkspace`/`Hyprland.workspaces` are reliable.
+- Workspace switching from the bar uses `hyprctl dispatch 'hl.dsp.focus({ workspace = N })'` (old dispatcher strings fail on Lua configs).
+- Idle inhibition: `Quickshell.Wayland.IdleInhibitor { window: <PanelWindow>; enabled: bool }` — respected by hypridle (Waybar's DBus ScreenSaver variant was not).
+- Right-click tray menus are rendered in-shell from `QsMenuOpener` with submenu drill-down (`QsMenuEntry.triggered()` on leaves; `menu` on parents feeds a new opener).
+- The mpd module was replaced by an MPRIS `Media` widget (mpd is installed but never running and has no MPRIS bridge).
 
 ## Checking for Configuration Errors
 

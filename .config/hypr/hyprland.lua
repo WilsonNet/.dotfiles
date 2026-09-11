@@ -54,13 +54,10 @@ function lid_closed()
     return s ~= nil and s:find("closed") ~= nil
 end
 
--- Waybar 0.15+ handles monitor hotplug natively (it tracks Gdk monitor
--- add/remove and creates/removes bars for the outputs in its config), so we
--- spawn it once at startup and never touch it on monitor/lid changes.
--- Restarting it (kill + delayed respawn) caused duplicate bars whenever
--- several monitor events fired in a row (e.g. resume from suspend), and also
--- killed the native hotplug handling.
--- If you edit the waybar config, reload it in-place with: pkill -SIGUSR2 waybar
+-- Quickshell creates one PanelWindow per screen (Quickshell.screens Variants
+-- in ~/.config/quickshell/shell.qml), so it handles monitor hotplug natively.
+-- Spawn it once at startup and never restart it on monitor/lid changes.
+-- Config hot-reloads on save; check `qs log` for runtime errors.
 
 -- hl.monitor() merges with the existing rule for an output, so `disabled`
 -- must always be passed explicitly on both branches.
@@ -92,7 +89,7 @@ hl.on("config.reloaded", apply_monitors)
 hl.on("hyprland.start", function()
     hl.timer(function()
         apply_monitors()
-        hl.exec_cmd("waybar")
+        hl.exec_cmd("quickshell -n")
     end, { timeout = 1500, type = "oneshot" })
 end)
 
@@ -278,7 +275,7 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.window.kill())
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("pavucontrol"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
