@@ -38,7 +38,11 @@ Pill {
         return album ? `${label}\n${album}` : label;
     }
 
-    onLabelChanged: track.x = 0
+    onLabelChanged: {
+        track.x = 0;
+        marqueeStart.done = false;
+        marqueeStart.restart();
+    }
 
     Item {
         id: viewport
@@ -111,19 +115,27 @@ Pill {
             fragmentShader: "../shaders/led.frag.qsb"
         }
 
-        SequentialAnimation {
-            running: viewport.overflowing && !root.hovered
-            loops: Animation.Infinite
+        Timer {
+            id: marqueeStart
 
-            PauseAnimation { duration: 2500 }
-            NumberAnimation {
-                target: track
-                property: "x"
-                from: 0
-                to: -viewport.loopDistance
-                duration: Math.max(4000, viewport.loopDistance / 45 * 1000)
-                easing.type: Easing.Linear
-            }
+            interval: 2500
+            running: true
+            repeat: false
+            property bool done: false
+            onTriggered: done = true
+        }
+
+        NumberAnimation {
+            id: marqueeAnim
+
+            target: track
+            property: "x"
+            running: viewport.overflowing && !root.hovered && marqueeStart.done
+            loops: Animation.Infinite
+            from: 0
+            to: -viewport.loopDistance
+            duration: Math.max(4000, viewport.loopDistance / 45 * 1000)
+            easing.type: Easing.Linear
         }
     }
 

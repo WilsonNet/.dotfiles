@@ -180,16 +180,21 @@ Item {
                visible: viewport.overflowing }
     }
 
-    SequentialAnimation {
-        running: viewport.overflowing && !root.hovered   // pause on hover
+    // Seamless loop: the two identical copies are spaced by track.spacing, so
+    // at x = -(width + spacing) copy 2 sits exactly where copy 1 started. An
+    // infinite linear animation restarts from 0 there with no visible jump —
+    // do NOT put a PauseAnimation inside the loops (it runs every cycle).
+    // The one-shot Timer holds the start 2.5s and is restarted on label change.
+    Timer { id: marqueeStart; interval: 2500; running: true; repeat: false
+            property bool done: false; onTriggered: done = true }
+
+    NumberAnimation {
+        target: track; property: "x"
+        running: viewport.overflowing && !root.hovered && marqueeStart.done
         loops: Animation.Infinite
-        PauseAnimation { duration: 2500 }
-        NumberAnimation {
-            target: track; property: "x"
-            from: 0; to: -viewport.loopDistance
-            duration: Math.max(4000, viewport.loopDistance / 45 * 1000)
-            easing.type: Easing.Linear
-        }
+        from: 0; to: -viewport.loopDistance
+        duration: Math.max(4000, viewport.loopDistance / 45 * 1000)
+        easing.type: Easing.Linear
     }
 }
 ```
