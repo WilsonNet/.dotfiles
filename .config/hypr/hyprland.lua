@@ -79,7 +79,51 @@ function apply_monitors()
     else
         hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6, disabled = false })
     end
+
+    -- Arm the layer-surface nudge (see below) for the next layout change.
+    layer_nudge_targets = { PROFILES.eDP.output }
+    if ext then
+        layer_nudge_targets[#layer_nudge_targets + 1] = ext.output
+    end
+    layer_nudge_pending = true
 end
+
+-- WORKAROUND for Hyprland <= 0.56.2, fixed upstream by ab2d313b ("monitor: fix
+-- layer arrangement on layout changes", released in 0.57): when a rule change
+-- moves *other* monitors (e.g. disabling eDP-1 on lid close reflows the
+-- external from x=1600 to x=0), Hyprland only re-arranges layer surfaces for
+-- monitors whose rule changed. Layer surfaces on the moved monitor (quickshell
+-- bar, already mapped, correctly sized) keep their old global x and end up
+-- hanging off the screen edge. Re-applying a monitor's rule with its *settled*
+-- explicit position counts as a soft rule change, making Hyprland re-run
+-- arrangeLayersForMonitor for that monitor without moving it. The explicit
+-- position is replaced by the profile's `position = "auto"` on the next
+-- apply_monitors(), so the rule table self-heals.
+-- Remove this workaround once Hyprland >= 0.57 is installed.
+function nudge_layer_arrangement(selectors)
+    for _, selector in ipairs(selectors) do
+        for _, m in ipairs(hl.get_monitors()) do
+            local matches
+            if selector:sub(1, 5) == "desc:" then
+                matches = m.description ~= nil and m.description:find(selector:sub(6), 1, true) ~= nil
+            else
+                matches = m.name == selector
+            end
+            if matches then
+                hl.monitor({ output = selector, position = m.x .. "x" .. m.y })
+                break
+            end
+        end
+    end
+end
+
+hl.on("monitor.layout_changed", function()
+    if not layer_nudge_pending then
+        return
+    end
+    layer_nudge_pending = false
+    nudge_layer_arrangement(layer_nudge_targets)
+end)
 
 -- Re-apply on hotplug, after reloads, and shortly after startup
 -- (monitors may still be enumerating when hyprland.start fires).
