@@ -40,7 +40,7 @@ PanelWindow {
         id: activeWindow
 
         anchors.verticalCenter: parent.verticalCenter
-        maxWidth: Math.max(80, rightRow.x - (leftRow.x + leftRow.width) - 24)
+        maxWidth: Math.max(0, rightRow.x - (leftRow.x + leftRow.width) - 24)
         x: Math.round((leftRow.x + leftRow.width + rightRow.x) / 2 - width / 2)
     }
 
@@ -54,10 +54,14 @@ PanelWindow {
         }
         spacing: Theme.pillSpacing
 
-        Media {}
+        Media {
+            maxTextWidth: Math.max(120, Math.min(240, root.width * 0.12))
+        }
         Volume {}
         Timer {}
-        NetworkStatus {}
+        NetworkStatus {
+            compact: root.width < 1700
+        }
         IdleInhibit {}
         PowerMode {}
         Cpu {}

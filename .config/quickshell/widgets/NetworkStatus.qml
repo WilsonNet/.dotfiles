@@ -23,7 +23,15 @@ Pill {
         return "disconnected";
     }
     readonly property int signalStrength: connectedWifi ? Math.round((connectedWifi.signalStrength || 0) * 100) : -1
+    readonly property string icon: {
+        if (kind === "ethernet")
+            return "\uF796";
+        if (kind === "wifi")
+            return "\uF1EB";
+        return "\u26A0";
+    }
 
+    property bool compact: false
     property string ip: ""
 
     function findDevice(type) {
@@ -44,17 +52,19 @@ Pill {
         if (root.kind === "ethernet")
             return (root.wired ? root.wired.name : "ethernet") + (root.ip ? ` \u00B7 ${root.ip}` : "");
         if (root.kind === "wifi" && root.connectedWifi)
-            return (root.wifi ? root.wifi.name : "wifi") + ` \u00B7 ${root.connectedWifi.ssid} (${root.signalStrength}%)`;
+            return (root.wifi ? root.wifi.name : "wifi") + ` \u00B7 ${root.connectedWifi.name} (${root.signalStrength}%)`;
         return "No connection";
     }
 
     Text {
         text: {
+            if (root.compact)
+                return root.icon;
             if (root.kind === "ethernet")
-                return (root.ip || "No IP") + " \uF796";
+                return (root.ip || "No IP") + ` ${root.icon}`;
             if (root.kind === "wifi" && root.connectedWifi)
-                return `${root.connectedWifi.ssid} (${root.signalStrength}%) \uF1EB`;
-            return "Disconnected \u26A0";
+                return `${root.connectedWifi.name} (${root.signalStrength}%) ${root.icon}`;
+            return `Disconnected ${root.icon}`;
         }
         color: Theme.base
         font.pixelSize: Theme.fontSize
