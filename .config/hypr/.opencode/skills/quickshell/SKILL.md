@@ -35,6 +35,7 @@ Check data before trusting memory; 0.3.x changes fast.
 - `Tooltip.qml` — singleton; one shared tooltip surface driven by `Tooltip.show(item, text, calendar?)` / `hide(item)`.
 - `HyprDevices.qml` — singleton polling `hyprctl devices -j` 1/s for caps/num/layout.
 - `widgets/` — one file per module (Workspaces, ActiveWindow, Media, Volume, Timer, NetworkStatus, IdleInhibit, PowerMode, Cpu, Memory, Temperature, Backlight, KeyboardState, Language, Battery, Clock, Tray, PowerButton).
+- `shaders/` — Qt Shader Baker sources + compiled binaries (`led.frag` / `led.frag.qsb`); the Media pill renders its marquee as a white-hot dot-matrix LED panel with it.
 
 ## Dev loop
 
@@ -75,6 +76,8 @@ If a file crashes qmllint, bisect for these two before blaming the config.
 - `Quickshell.execDetached(["cmd", "arg"])` for fire-and-forget; use `["sh", "-c", "..."]` when shell features (env vars, `||`) are needed.
 - Restarting the shell on monitor changes is unnecessary and leaves stale layers: `Variants` over `Quickshell.screens` creates/removes a `PanelWindow` per screen automatically.
 - `PersistentProperties` only persists across **config reloads**, not across process restarts (the docs phrase it as surviving "a reload"). For real settings persistence use a `FileView` whose `adapter` is a `JsonAdapter`, writing under `Quickshell.stateDir` (e.g. `~/.local/state/quickshell/by-shell/<id>/`). Write **explicitly** from setters (`settingsFile.writeAdapter()`), not from `onAdapterUpdated`: during a reload the adapter can emit with default values before/while the file loads and clobber the saved file with defaults. See `Settings.qml` + `references/api-patterns.md`.
+- **Qt 6 ShaderEffect needs a `.qsb`, not inline GLSL.** A shader string logs `shader preparation failed ... must be preprocessed using the Qt Shader Tools`. Write `#version 440` with `layout(std140, binding = 0) uniform buf { mat4 qt_Matrix; float qt_Opacity; ...custom... }` and `layout(binding = 1) uniform sampler2D source;`, then `/usr/lib/qt6/bin/qsb --qt6 -o x.frag.qsb x.frag` (qt6-shadertools; `qsb` is not on PATH). QML properties map into the uniform block; commit both the `.frag` source and the compiled `.qsb`.
+- **A recompiled `.qsb` is NOT picked up by config hot-reload** (Qt caches the shader per URL) — restart the shell to see shader edits. QML-only edits still hot-reload. Restart with `pkill -x quickshell; nohup quickshell -n &`: a plain `quickshell` started alongside the autostart instance leaves two stacked bars/layers.
 - **Bar PopupWindows cannot take keyboard input here.** `grabFocus: true` conflicts with `HyprlandFocusGrab` (the popup disappears), and with a keyboard grab the compositor dismisses the popup on the first key because the parent layer surface isn't keyboard-interactive. Even `ydotool`-injected keys close it. Omarchy works around this with a full-screen layer-shell `KeyboardPanel` (`WlrLayershell.keyboardFocus` OnDemand/Exclusive). For bar popups, design click-only UIs (buttons/steppers/wheel); do not rely on `TextInput`.
 
 ## Responsive layout (bar)
@@ -91,7 +94,7 @@ Snippets: `references/api-patterns.md` § Responsive layout.
 
 ## Testing (summary)
 
-Full harness in `references/testing.md`. Core loop: change → `qs log` clean → screenshot with `grim` → crop/zoom with ImageMagick → read with the vision subagent → corroborate with pixel diffs → drive interactions with `ydotool` → compare values against ground truth (`wpctl`, `upower`, `nmcli`, `hyprctl`, `/proc`, sysfs).
+Full harness in `references/testing.md`. Core loop: change → `qs log` clean → screenshot with `grim` → crop/zoom with ImageMagick → read with the vision subagent → corroborate with pixel diffs → drive interactions with `ydotool` → compare values against ground truth (`wpctl`, `upower`, `nmcli`, `hyprctl`, `/proc`, sysfs). Contrast check: sample `grim` output with PIL and compute WCAG relative luminance (Media LED panel measured peak 18.5:1, mean ink 8.6–9.1:1).
 
 Quick recipes:
 

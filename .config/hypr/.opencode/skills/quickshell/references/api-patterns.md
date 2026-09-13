@@ -213,6 +213,47 @@ object (`fillWidth`, `maximumWidth`, `preferredWidth`) lets the layout shrink
 items itself — the official guide prefers Layouts over Row/Column. This bar
 predates that and passes caps down instead.
 
+## LED dot-matrix shader (Media pill)
+
+`shaders/led.frag` (+ compiled `led.frag.qsb`) turns the marquee into a dot
+matrix: `ShaderEffectSource { sourceItem: marquee; live: true; hideSource: true }`
+feeds a `ShaderEffect` that quantizes the source into cells, samples 5 points per
+cell for luminance (`avg*1.3 + peak*1.1` saturates strokes), adds a bloom halo,
+and tints `mix(ledColor, white, lit)` — white-hot dot cores, color in the
+seams/glow. Dot pitch is adaptive: CJK labels need `cell ≈ 1.6` (with
+`/[\u3000-\u30ff\u4e00-\u9fff…]/.test(label)`) or kanji turn to mush.
+
+Qt 6 note: `fragmentShader` must be a qsb — inline GLSL strings are rejected.
+QML properties map into the shader's std140 block:
+
+```qml
+ShaderEffect {
+    property vector2d res: Qt.vector2d(width, height)  // logical px
+    property real cell: 2.1        // LED pitch
+    property real dotRadius: 0.5   // 0..0.5 of a cell
+    property color led: Theme.ledGreen
+    property real bloom: 0.85
+    fragmentShader: "../shaders/led.frag.qsb"
+}
+```
+
+```glsl
+#version 440
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+layout(std140, binding = 0) uniform buf {
+    mat4 qt_Matrix; float qt_Opacity;
+    vec2 res; float cell; float dotRadius; vec4 led; float bloom;
+};
+layout(binding = 1) uniform sampler2D source;
+```
+
+Compile (qsb is not on PATH): `/usr/lib/qt6/bin/qsb --qt6 -o led.frag.qsb led.frag`.
+A recompiled qsb is **not** picked up by hot-reload (cached per URL) — restart
+the shell (`pkill -x quickshell; nohup quickshell -n &`). Verify contrast by
+sampling grim pixels: WCAG relative luminance of dot cores vs panel gave 18.5:1
+peak / 8.6:1 mean ink.
+
 ## FileView (sysfs/live files)
 
 ```qml
