@@ -18,6 +18,7 @@ This skill holds the workflow, the API gotchas that cost real debugging time, an
 Check data before trusting memory; 0.3.x changes fast.
 
 - **Official docs (versioned)**: https://quickshell.org/docs/v0.3.1/ — the site defaults to the docs of the latest release, so always match the version selector to `quickshell --version`. Type reference index: https://quickshell.org/docs/v0.3.1/types/ (e.g. `Quickshell.Services.Pipewire/PwNodeAudio`).
+- **Sizing/layout guide (read before touching bar layout)**: https://quickshell.org/docs/v0.3.1/guide/size-position — implicit size flows child→parent, actual size parent→child; `childrenRect` as a size source is a binding-loop trap; docs recommend `RowLayout`/`ColumnLayout` over `Row`/`Column`.
 - **Changelog / breaking changes**: https://quickshell.org/changelog/
 - **Installed stubs (exact ground truth for this machine)**: `/usr/lib/qt6/qml/Quickshell/**/*.qmltypes` — grep property/method/signal names, e.g. `rg "activeToplevel" /usr/lib/qt6/qml/Quickshell/`.
 - **Official examples**: https://github.com/quickshell-mirror/quickshell-examples
@@ -75,6 +76,18 @@ If a file crashes qmllint, bisect for these two before blaming the config.
 - Restarting the shell on monitor changes is unnecessary and leaves stale layers: `Variants` over `Quickshell.screens` creates/removes a `PanelWindow` per screen automatically.
 - `PersistentProperties` only persists across **config reloads**, not across process restarts (the docs phrase it as surviving "a reload"). For real settings persistence use a `FileView` whose `adapter` is a `JsonAdapter`, writing under `Quickshell.stateDir` (e.g. `~/.local/state/quickshell/by-shell/<id>/`). Write **explicitly** from setters (`settingsFile.writeAdapter()`), not from `onAdapterUpdated`: during a reload the adapter can emit with default values before/while the file loads and clobber the saved file with defaults. See `Settings.qml` + `references/api-patterns.md`.
 - **Bar PopupWindows cannot take keyboard input here.** `grabFocus: true` conflicts with `HyprlandFocusGrab` (the popup disappears), and with a keyboard grab the compositor dismisses the popup on the first key because the parent layer surface isn't keyboard-interactive. Even `ydotool`-injected keys close it. Omarchy works around this with a full-screen layer-shell `KeyboardPanel` (`WlrLayershell.keyboardFocus` OnDemand/Exclusive). For bar popups, design click-only UIs (buttons/steppers/wheel); do not rely on `TextInput`.
+
+## Responsive layout (bar)
+
+Rules live in the official guide above; short version for this bar:
+
+- Implicit size flows child→parent, actual size parent→child. Don't set a container-managed child's own size; don't use `childrenRect` as a size source (binding-loop trap). Quickshell ships `WrapperItem`/`MarginWrapperManager` for margin wrappers.
+- Docs prefer `RowLayout`/`ColumnLayout` (QtQuick.Layouts) — `Layout.fillWidth`/`maximumWidth` can shrink items. This bar uses plain `Row`s, so **no widget knows the available width**: caps must be passed down from `Bar.qml` (`root.width` = screen logical px), e.g. `Media { maxTextWidth: Math.max(120, Math.min(240, root.width * 0.12)) }`, `NetworkStatus { compact: root.width < 1700 }`.
+- Overlap mechanics: the right-anchored `Row` grows leftwards; an unbounded `Text` in a `Pill` (long song title/SSID) covers Workspaces/ActiveWindow. Cap + elide or marquee the text; full value goes in `tooltip`.
+- `ActiveWindow` is absolutely centered between the rows: compute `x` and `maxWidth` from `leftRow.x + leftRow.width` and `rightRow.x`, and clamp with `Math.max(0, gap)` — a positive floor (`Math.max(80, gap)`) pushes text under the right row once the gap shrinks.
+- Verification: `grim` geometry is logical, but the PNG is **physical** px (scale 1.6 here) — divide by `hyprctl monitors` scale before comparing pixels to QML coordinates. Marquee check: two screenshots ~1.5 s apart must differ.
+
+Snippets: `references/api-patterns.md` § Responsive layout.
 
 ## Testing (summary)
 

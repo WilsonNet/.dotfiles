@@ -128,9 +128,90 @@ readonly property var wired: findDevice(DeviceType.Wired)     // device.type/.co
 readonly property var wifi: findDevice(DeviceType.Wifi)
 readonly property var connectedWifi: wifi ? wifi.networks.values.find(n => n.connected) : null
 // wifiEnabled, connectivity (NetworkConnectivity.*), checkConnectivity()
-// signalStrength is 0..1; ssid/name on the WifiNetwork; guard during transitions (nulls!)
+// signalStrength is 0..1; the SSID is Network.name (there is NO `.ssid` — it
+// silently renders as "undefined"); guard during transitions (nulls!)
 // IPv4 for wired: Process ["nmcli","-t","-g","IP4.ADDRESS","device","show", iface]
 ```
+
+## Responsive layout / overflowing text
+
+The bar is three independent rows in `PanelWindow`; anchored rows grow toward the
+middle, so each widget must cap its own width. Caps/compact flags are set from
+`Bar.qml` (`root.width` = screen logical px) because a plain `Row` gives children
+no available-width signal. See the official guide
+`https://quickshell.org/docs/v0.3.1/guide/size-position` for the underlying rules
+(implicit vs actual size, `childrenRect` binding loops, when to prefer Layouts).
+
+Cap + elide, full value in the tooltip:
+
+```qml
+readonly property real maxTextWidth: 200
+Text {
+    text: root.label
+    width: Math.min(implicitWidth, root.maxTextWidth)
+    elide: Text.ElideRight
+    font.pixelSize: Theme.fontSize
+    font.family: Theme.fontFamily
+}
+```
+
+Marquee — `widgets/Media.qml` scrolls a clipped viewport with two copies of the
+text; the infinite animation restarts from 0 after moving exactly one loop
+distance, so the wrap is seamless:
+
+```qml
+Item {
+    id: viewport
+    clip: true
+    implicitWidth: Math.min(labelText.implicitWidth, root.maxTextWidth)
+    implicitHeight: labelText.implicitHeight
+    readonly property bool overflowing: labelText.implicitWidth > width
+    readonly property real loopDistance: labelText.implicitWidth + track.spacing
+    onOverflowingChanged: if (!overflowing) track.x = 0
+
+    Text { id: labelText; visible: false; text: root.label
+           font.pixelSize: Theme.fontSize; font.family: Theme.fontFamily }
+
+    Row {
+        id: track
+        spacing: 32
+        Text { text: labelText.text; color: Theme.base; font: labelText.font }
+        Text { text: labelText.text; color: Theme.base; font: labelText.font
+               visible: viewport.overflowing }
+    }
+
+    SequentialAnimation {
+        running: viewport.overflowing && !root.hovered   // pause on hover
+        loops: Animation.Infinite
+        PauseAnimation { duration: 2500 }
+        NumberAnimation {
+            target: track; property: "x"
+            from: 0; to: -viewport.loopDistance
+            duration: Math.max(4000, viewport.loopDistance / 45 * 1000)
+            easing.type: Easing.Linear
+        }
+    }
+}
+```
+
+Icon-only fallback when the bar is tight (NetworkStatus; full info stays in the
+tooltip): add `property bool compact: false`, set the Text to
+`root.compact ? root.icon : ssid + " (" + pct + "%) " + root.icon`, then from
+`Bar.qml`: `NetworkStatus { compact: root.width < 1700 }`.
+
+Center title between both rows (ActiveWindow) without underlapping the right row:
+
+```qml
+maxWidth: Math.max(0, rightRow.x - (leftRow.x + leftRow.width) - 24)  // no positive floor
+x: Math.round((leftRow.x + leftRow.width + rightRow.x) / 2 - width / 2)
+width: Math.min(implicitWidth, maxWidth)
+elide: Text.ElideRight
+```
+
+Alternative: `import QtQuick.Layouts` + `RowLayout` with the `Layout` attached
+object (`fillWidth`, `maximumWidth`, `preferredWidth`) lets the layout shrink
+items itself — the official guide prefers Layouts over Row/Column. This bar
+predates that and passes caps down instead.
 
 ## FileView (sysfs/live files)
 
