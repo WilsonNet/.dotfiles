@@ -1,6 +1,6 @@
 # Hyprland Configuration Notes for AI Agents
 
-> Scope: this folder owns Hyprland **and its Quickshell bar** (`~/.config/quickshell`). Before any bar/widget/QML work, read the `quickshell` opencode skill (`~/.config/opencode/skills/quickshell`; source of truth in `~/.dotfiles/.config/opencode/skills/quickshell`). It holds the dev loop, verified API gotchas, and the test harness. See "Quickshell Bar" below for the config map.
+> Scope: this folder owns Hyprland **and its Quickshell bar** (`~/.config/quickshell`). Before any bar/widget/QML work, read the `quickshell` opencode skill (`.opencode/skills/quickshell`, local to this folder — it loads only when opencode runs from `~/.config/hypr` or below). It holds the dev loop, verified API gotchas, and the test harness. See "Quickshell Bar" below for the config map.
 
 ## Config Format
 
@@ -55,7 +55,7 @@ The wiki documents "Latest git" by default and is versioned — always check the
 
 ## Quickshell Bar (replaced Waybar in Sep 2026)
 
-**Read the `quickshell` opencode skill first** (`~/.config/opencode/skills/quickshell`; source of truth in `~/.dotfiles/.config/opencode/skills/quickshell`) — dev loop, verified API gotchas, and the test harness live there.
+**Read the `quickshell` opencode skill first** (`.opencode/skills/quickshell`, project-local to `~/.config/hypr`) — dev loop, verified API gotchas, and the test harness live there.
 
 Config: `~/.config/quickshell` → `~/.dotfiles/.config/quickshell` (symlink).
 
