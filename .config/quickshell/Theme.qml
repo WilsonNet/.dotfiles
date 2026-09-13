@@ -27,6 +27,8 @@ Singleton {
     readonly property color pink: "#f5c2e7"
     readonly property color flamingo: "#f2cdcd"
     readonly property color rosewater: "#f5e0dc"
+    readonly property color ledGreen: "#5cff9d"
+    readonly property color ledAmber: "#ffb454"
 
     readonly property int barHeight: 50
     readonly property int pillHeight: 42

@@ -20,9 +20,13 @@ Pill {
     }
 
     property real maxTextWidth: 200
+    readonly property bool hasCJK: /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]/.test(label)
+    property real ledCellSize: hasCJK ? 1.6 : 2.1
+    property real ledDotRadius: 0.5
+    readonly property color ledColor: playing ? Theme.ledGreen : Theme.ledAmber
 
     visible: player !== null
-    bg: playing ? Theme.alpha(Theme.green, 0.75) : Theme.alpha(Theme.teal, 0.75)
+    bg: Theme.alpha(Theme.crust, 0.9)
     interactive: visible
     tooltip: {
         if (!root.player)
@@ -39,7 +43,6 @@ Pill {
     Item {
         id: viewport
 
-        clip: true
         implicitWidth: Math.min(labelText.implicitWidth, root.maxTextWidth)
         implicitHeight: labelText.implicitHeight
 
@@ -56,27 +59,56 @@ Pill {
 
             visible: false
             text: root.label
-            font.pixelSize: Theme.fontSize
+            font.pixelSize: 22
+            font.bold: true
             font.family: Theme.fontFamily
         }
 
-        Row {
-            id: track
+        Item {
+            id: marqueeArea
 
-            spacing: 32
+            anchors.fill: parent
+            clip: true
 
-            Text {
-                text: labelText.text
-                color: Theme.base
-                font: labelText.font
+            Row {
+                id: track
+
+                spacing: 32
+
+                Text {
+                    text: labelText.text
+                    color: "white"
+                    font: labelText.font
+                }
+
+                Text {
+                    text: labelText.text
+                    color: "white"
+                    font: labelText.font
+                    visible: viewport.overflowing
+                }
             }
+        }
 
-            Text {
-                text: labelText.text
-                color: Theme.base
-                font: labelText.font
-                visible: viewport.overflowing
-            }
+        ShaderEffectSource {
+            id: marqueeSource
+
+            sourceItem: marqueeArea
+            live: true
+            hideSource: true
+        }
+
+        ShaderEffect {
+            id: ledPanel
+
+            anchors.fill: parent
+            property var source: marqueeSource
+            property vector2d res: Qt.vector2d(width, height)
+            property real cell: root.ledCellSize
+            property real dotRadius: root.ledDotRadius
+            property color led: root.ledColor
+            property real bloom: 0.85
+            fragmentShader: "../shaders/led.frag.qsb"
         }
 
         SequentialAnimation {
