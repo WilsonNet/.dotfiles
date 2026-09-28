@@ -317,87 +317,95 @@ hl.device({
 
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
+-- The `description` option feeds the quickshell keyboard-shortcuts overlay
+-- (SUPER + slash). Format: "Group · Label"; the widget groups by the prefix.
+-- Binds without a description are skipped by the overlay.
+
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
-hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.window.close())
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("pavucontrol"))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo()) -- dwindle
-hl.bind(mainMod .. " + down", hl.dsp.layout("togglesplit"))
-hl.bind(mainMod .. " + T", hl.dsp.window.pin())
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("brave"))
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd('brave "https://www.bing.com/images/search?q=$(wl-paste -p | jq -sRr @uri)"'))
+hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(terminal), { description = "Apps · Terminal" })
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.window.close(), { description = "Windows · Close window" })
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("pavucontrol"), { description = "Apps · Volume mixer" })
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager), { description = "Apps · File manager" })
+hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }), { description = "Windows · Toggle floating" })
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu), { description = "Apps · App launcher" })
+hl.bind(mainMod .. " + P", hl.dsp.window.pseudo(), { description = "Windows · Toggle pseudo-tile" }) -- dwindle
+hl.bind(mainMod .. " + down", hl.dsp.layout("togglesplit"), { description = "Windows · Toggle split direction" })
+hl.bind(mainMod .. " + T", hl.dsp.window.pin(), { description = "Windows · Pin window" })
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("brave"), { description = "Apps · Browser" })
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd('brave "https://www.bing.com/images/search?q=$(wl-paste -p | jq -sRr @uri)"'), { description = "Apps · Reverse image search" })
 
 -- Screen OCR (Japanese via Google Lens): ~/bin/ocr-lens -> ~/.dotfiles/bin/ocr-lens.
 -- Fresh-install dependencies are listed in that script's header (owocr tool + slurp/grim/wl-clipboard).
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("ocr-lens"))
-hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region"))
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("rofi -show window"))
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("sleep 1 && systemctl suspend"))
-hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("ocr-lens"), { description = "Capture · OCR region (Japanese)" })
+hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region"), { description = "Capture · Screenshot region" })
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("rofi -show window"), { description = "Apps · Window switcher" })
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("sleep 1 && systemctl suspend"), { description = "System · Suspend" })
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen(), { description = "Windows · Toggle fullscreen" })
 
 -- Window group keybinds
-hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
-hl.bind(mainMod .. " + Tab", hl.dsp.group.next())
-hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.group.prev())
-hl.bind(mainMod .. " + SHIFT + G", hl.dsp.window.move({ out_of_group = true }))
-hl.bind(mainMod .. " + CTRL + G", hl.dsp.group.lock_active({ action = "toggle" }))
+hl.bind(mainMod .. " + G", hl.dsp.group.toggle(), { description = "Groups · Toggle group" })
+hl.bind(mainMod .. " + Tab", hl.dsp.group.next(), { description = "Groups · Next in group" })
+hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.group.prev(), { description = "Groups · Previous in group" })
+hl.bind(mainMod .. " + SHIFT + G", hl.dsp.window.move({ out_of_group = true }), { description = "Groups · Remove window from group" })
+hl.bind(mainMod .. " + CTRL + G", hl.dsp.group.lock_active({ action = "toggle" }), { description = "Groups · Lock group" })
 
 -- Ames
-hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd("bash /home/wilsonn/bin/ames.sh -s"))
-hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("bash /home/wilsonn/bin/ames.sh -r"))
-hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("bash /home/wilsonn/bin/ames.sh -c"))
+hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd("bash /home/wilsonn/bin/ames.sh -s"), { description = "Capture · Add screenshot to Anki" })
+hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("bash /home/wilsonn/bin/ames.sh -r"), { description = "Capture · Toggle Anki recording" })
+hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("bash /home/wilsonn/bin/ames.sh -c"), { description = "Capture · Add clipboard to Anki" })
 
 -- Move focus with mainMod + arrow keys
-hl.bind(mainMod .. " + h", hl.dsp.focus({ direction = "l" }))
-hl.bind(mainMod .. " + j", hl.dsp.focus({ direction = "r" }))
-hl.bind(mainMod .. " + k", hl.dsp.focus({ direction = "u" }))
-hl.bind(mainMod .. " + l", hl.dsp.focus({ direction = "d" }))
+hl.bind(mainMod .. " + h", hl.dsp.focus({ direction = "l" }), { description = "Focus · Left" })
+hl.bind(mainMod .. " + j", hl.dsp.focus({ direction = "r" }), { description = "Focus · Right" })
+hl.bind(mainMod .. " + k", hl.dsp.focus({ direction = "u" }), { description = "Focus · Up" })
+hl.bind(mainMod .. " + l", hl.dsp.focus({ direction = "d" }), { description = "Focus · Down" })
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
-    hl.bind(mainMod .. " + " .. key,         hl.dsp.focus({ workspace = i }))
-    hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
+    hl.bind(mainMod .. " + " .. key,         hl.dsp.focus({ workspace = i }), { description = "Workspaces · Go to " .. i })
+    hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }), { description = "Workspaces · Move window to " .. i })
 end
-hl.bind("F8", hl.dsp.focus({ workspace = 8 }))
-hl.bind("F9", hl.dsp.focus({ workspace = 9 }))
+hl.bind("F8", hl.dsp.focus({ workspace = 8 }), { description = "Workspaces · Go to 8 (F8)" })
+hl.bind("F9", hl.dsp.focus({ workspace = 9 }), { description = "Workspaces · Go to 9 (F9)" })
 
 -- Example special workspace (scratchpad)
-hl.bind(mainMod .. " + Y", hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + SHIFT + Y", hl.dsp.window.move({ workspace = "special:magic" }))
+hl.bind(mainMod .. " + Y", hl.dsp.workspace.toggle_special("magic"), { description = "Workspaces · Toggle scratchpad" })
+hl.bind(mainMod .. " + SHIFT + Y", hl.dsp.window.move({ workspace = "special:magic" }), { description = "Workspaces · Move to scratchpad" })
 
 -- Scroll through existing workspaces with mainMod + scroll
-hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }), { description = "Workspaces · Next workspace" })
+hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), { description = "Workspaces · Previous workspace" })
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true, description = "Windows · Drag window (mouse)" })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true, description = "Windows · Resize window (mouse)" })
 
 -- Laptop multimedia keys for volume and LCD brightness
-hl.bind("XF86AudioRaiseVolume",   hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"),  { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume",   hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),  { locked = true, repeating = true })
-hl.bind("XF86AudioMute",          hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true, repeating = true })
-hl.bind("XF86AudioMicMute",       hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessUp",    hl.dsp.exec_cmd("brightnessctl s 10%+"),                       { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown",  hl.dsp.exec_cmd("brightnessctl s 10%-"),                       { locked = true, repeating = true })
+hl.bind("XF86AudioRaiseVolume",   hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"),  { locked = true, repeating = true, description = "Media · Volume up" })
+hl.bind("XF86AudioLowerVolume",   hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),  { locked = true, repeating = true, description = "Media · Volume down" })
+hl.bind("XF86AudioMute",          hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true, repeating = true, description = "Media · Mute output" })
+hl.bind("XF86AudioMicMute",       hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, repeating = true, description = "Media · Mute microphone" })
+hl.bind("XF86MonBrightnessUp",    hl.dsp.exec_cmd("brightnessctl s 10%+"),                       { locked = true, repeating = true, description = "Media · Brightness up" })
+hl.bind("XF86MonBrightnessDown",  hl.dsp.exec_cmd("brightnessctl s 10%-"),                       { locked = true, repeating = true, description = "Media · Brightness down" })
 
 -- Requires playerctl
-hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true, description = "Media · Next track" })
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media · Play/pause" })
+hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media · Play/pause" })
+hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true, description = "Media · Previous track" })
 
 -- Toggle streaming 16:9 mode on the external monitor
 hl.bind(mainMod .. " + O", function()
     STREAMING = not STREAMING
     hl.notification.create({ text = STREAMING and "External monitor: 16:9 streaming mode" or "External monitor: native mode", timeout = 3000, icon = "ok" })
     apply_monitors()
-end)
+end, { description = "System · Toggle streaming 16:9" })
+
+-- Keyboard-shortcuts overlay (quickshell): modal cheat sheet above everything.
+-- Same bind toggles it closed; Esc or clicking the backdrop also closes it.
+hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call shortcuts toggle"), { description = "System · Keyboard shortcuts" })
 
 -- Lid switch: closed -> external only, open -> both monitors
 hl.bind("switch:on:Lid Switch", apply_monitors, { locked = true })

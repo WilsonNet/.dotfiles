@@ -11,6 +11,26 @@ ShellRoot {
         Bar {}
     }
 
+    Shortcuts {
+        id: shortcuts
+    }
+
+    IpcHandler {
+        target: "shortcuts"
+
+        function toggle() {
+            shortcuts.toggle();
+        }
+
+        function open() {
+            shortcuts.open();
+        }
+
+        function close() {
+            shortcuts.close();
+        }
+    }
+
     IpcHandler {
         target: "debug"
 

@@ -64,7 +64,8 @@ The wiki documents "Latest git" by default and is versioned — always check the
 
 Config: `~/.config/quickshell` → `~/.dotfiles/.config/quickshell` (symlink).
 
-- `shell.qml` (ShellRoot, Variants per screen, `debug` IPC target), `Bar.qml` (PanelWindow + 3 sections + shared tooltip window), `Pill.qml` (shared pill: bg, hover underline, tooltip, click/scroll signals), `BarPopup.qml` (anchored popup + HyprlandFocusGrab), `Tooltip.qml` (singleton backing one shared popup; clock calendar), `HyprDevices.qml` (polls `hyprctl devices -j` 1/s for caps/num/layout), `widgets/*.qml` (one file per module).
+- `shell.qml` (ShellRoot, Variants per screen, `debug` + `shortcuts` IPC targets), `Bar.qml` (PanelWindow + 3 sections + shared tooltip window), `Pill.qml` (shared pill: bg, hover underline, tooltip, click/scroll signals), `BarPopup.qml` (anchored popup + HyprlandFocusGrab), `Tooltip.qml` (singleton backing one shared popup; clock calendar), `HyprDevices.qml` (polls `hyprctl devices -j` 1/s for caps/num/layout), `widgets/*.qml` (one file per module).
+- `Shortcuts.qml` — modal keybind cheat sheet (Overlay-layer PanelWindow on the focused monitor, `WlrKeyboardFocus.Exclusive`, Esc/backdrop click/same-shortcut closes). Renders `hyprctl binds -j` entries that have descriptions; new binds should set `{ description = "Group · Label" }` in `hyprland.lua` or they won't appear. Toggled with `SUPER + slash` via `qs ipc call shortcuts toggle` (also `open`/`close`).
 - Waybar is still installed and its config untouched in `~/.config/waybar`, but it is no longer autostarted. `hyprland.lua` runs `quickshell -n` once after `apply_monitors()`.
 
 Runtime:

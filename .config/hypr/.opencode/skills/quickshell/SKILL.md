@@ -27,7 +27,8 @@ Check data before trusting memory; 0.3.x changes fast.
 
 ## Config layout
 
-- `shell.qml` — `ShellRoot`, `Variants` over `Quickshell.screens` (one `Bar` per screen), `debug` `IpcHandler`.
+- `shell.qml` — `ShellRoot`, `Variants` over `Quickshell.screens` (one `Bar` per screen), `debug` + `shortcuts` `IpcHandler`s.
+- `Shortcuts.qml` — modal keyboard cheat sheet (`Overlay`-layer `PanelWindow`, `WlrKeyboardFocus.Exclusive`, Esc/backdrop/same-shortcut closes; reads `hyprctl binds -j` and groups by the `"Group · Label"` descriptions set in `hyprland.lua`). Toggled by SUPER + slash → `qs ipc call shortcuts toggle`.
 - `Bar.qml` — `PanelWindow` (50px, alpha `.7`, namespace `quickshell`), left/center/right rows, shared tooltip `PopupWindow`.
 - `Theme.qml` — Catppuccin Mocha palette + metrics (`barHeight`, `pillHeight/Radius/Padding/Spacing`, `fontSize`, `fontFamily`) and `alpha(color, a)`.
 - `Pill.qml` — every module is wrapped in this: bg color, bottom hover underline, tooltip plumbing, `clicked/rightClicked/middleClicked/scrolled`.
@@ -54,10 +55,11 @@ mkdir -p /tmp/opencode/qmlimports && ln -sfn ~/.config/quickshell /tmp/opencode/
 qmllint -I /usr/lib/qt6/qml -I /tmp/opencode/qmlimports <file.qml>
 ```
 
-Two qmllint issues with this Qt (6.11.2) build — **runtime is fine**, the linter exits 255 with no message. Avoid these in code so lint stays clean:
+Three qmllint issues with this Qt (6.11.2) build — **runtime is fine**, the linter exits 255 with no message. Avoid these in code so lint stays clean:
 
 - `?.` optional chaining → use explicit null checks (`x ? x.y : null`).
 - `: var` return annotations on functions that return arrays → drop the `: var`.
+- `: void` return annotations on IpcHandler functions → drop the annotation.
 
 If a file crashes qmllint, bisect for these two before blaming the config.
 
@@ -71,7 +73,7 @@ If a file crashes qmllint, bisect for these two before blaming the config.
 - `Quickshell.Wayland.IdleInhibitor { window: <window>; enabled: bool }` — `window` from `root.QsWindow.window`. hypridle respects it (Waybar's DBus ScreenSaver variant did not).
 - Tray right-click menus: `SystemTray.items.values`, `item.menu` → `QsMenuOpener`. Submenus are **not** displayable via the platform (`display()` needs QApplication mode); render in-shell instead: for an entry with `hasChildren`, create a new `QsMenuOpener { menu: entry }` (QsMenuEntry is a QsMenuHandle), keep a stack, and show a back header. Leaves: `entry.triggered()`.
 - `PanelWindow` anchors are booleans (which screen edges), not item anchors. Popups must anchor below the bar: set `anchor.rect.y = window.height + gap`, not `target.height + gap`.
-- `Pill`-style click handlers: ydotool's `0x00` does nothing; real clicks are `0xC0` (left), `0xC1` (right), `0xC2` (middle).
+- `Pill`-style click handlers: ydotool's `0x00` does nothing; real clicks are `0xC0` (left), `0xC1` (right), `0xC2` (middle). ydotoold's absolute coordinates are doubled on this setup: `ydotool mousemove -a -x N` lands at logical `2N` (`hyprctl cursorpos` reports logical px), so halve the target coordinates.
 - `Process` streams: `stdio`-style `SplitParser { onRead: (line) => ... }` for line streams (`waybar_timer hook`), `StdioCollector { onStreamFinished: ... }` for one-shot commands. `this.text` inside the collector handlers.
 - `Quickshell.execDetached(["cmd", "arg"])` for fire-and-forget; use `["sh", "-c", "..."]` when shell features (env vars, `||`) are needed.
 - Restarting the shell on monitor changes is unnecessary and leaves stale layers: `Variants` over `Quickshell.screens` creates/removes a `PanelWindow` per screen automatically.
