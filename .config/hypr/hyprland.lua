@@ -419,6 +419,14 @@ hl.window_rule({
     pin   = true,
 })
 
+-- Browser Picture-in-Picture: float and pin (Chromium/Firefox title variants)
+hl.window_rule({
+    name  = "picture-in-picture",
+    match = { title = "^([Pp]icture[-\\s]?[Ii]n[-\\s]?[Pp]icture)(.*)$" },
+    float = true,
+    pin   = true,
+})
+
 -- Ignore maximize requests from apps. You'll probably like this.
 hl.window_rule({
     name            = "suppress-maximize-events",
