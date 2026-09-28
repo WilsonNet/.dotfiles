@@ -330,7 +330,9 @@ hl.bind(mainMod .. " + T", hl.dsp.window.pin())
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("brave"))
 hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd('brave "https://www.bing.com/images/search?q=$(wl-paste -p | jq -sRr @uri)"'))
 
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("transformers_ocr recognize"))
+-- Screen OCR (Japanese via Google Lens): ~/bin/ocr-lens -> ~/.dotfiles/bin/ocr-lens.
+-- Fresh-install dependencies are listed in that script's header (owocr tool + slurp/grim/wl-clipboard).
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("ocr-lens"))
 hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region"))
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("rofi -show window"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("sleep 1 && systemctl suspend"))

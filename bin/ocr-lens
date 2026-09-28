@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Japanese OCR from a screen region using Google Lens.
+#
+# Same engine GameSentenceMiner uses by default ("glens" in owocr): slurp
+# prompts for a region, grim captures it, Google Lens reads the Japanese text,
+# and the result is copied to the clipboard. Progress is reported through
+# desktop notifications.
+#
+# Fresh machine setup (see also ocr-lens-engine.py):
+#   * system packages: hyprland (hyprctl), slurp, grim, wl-clipboard, libnotify, jq
+#   * python engine:  uv tool install --python 3.13 --with regex 'owocr[lens]'
+#     (anything that puts an `owocr` executable on PATH works; this script finds
+#     the interpreter through it)
+set -euo pipefail
+
+BIN_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+ENGINE="$BIN_DIR/ocr-lens-engine.py"
+NOTIFY_ID=28913
+
+notify() {
+    notify-send --app-name="OCR" --replace-id="$NOTIFY_ID" "$@"
+}
+
+# The engine runs in the environment that provides the `owocr` executable
+# (its Google Lens extras: curl_cffi, protobuf, Pillow, jaconv, regex).
+if ! command -v owocr >/dev/null; then
+    notify "OCR: not set up" "Missing the 'owocr' tool — see bin/ocr-lens header"
+    exit 1
+fi
+owocr_py="$(dirname "$(readlink -f "$(command -v owocr)")")/python"
+
+img="$(mktemp --suffix=.png)"
+err="$(mktemp)"
+trap 'rm -f "$img" "$err"' EXIT
+
+# slurp prompts for a region; visible windows are offered as snap targets
+# (same UX as hyprshot -m region). Esc or right-click cancels.
+boxes="$(hyprctl clients -j | jq --argjson active "$(hyprctl monitors -j | jq -c '[.[].activeWorkspace.id]')" \
+    '.[] | select((.hidden | not) and (.workspace.id as $id | $active | contains([$id]))) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' -r)"
+region="$(slurp -d <<< "$boxes")" || exit 0
+
+grim -g "$region" "$img"
+notify "Reading Japanese text…" "Google Lens"
+
+if text="$("$owocr_py" "$ENGINE" "$img" 2>"$err")"; then
+    if [[ -z "$text" ]]; then
+        notify "OCR: no text found" "Nothing recognizable in the selected region"
+        exit 0
+    fi
+    printf '%s' "$text" | wl-copy
+    preview="${text//$'\n'/ }"
+    notify "OCR: copied to clipboard" "${preview:0:128}"
+else
+    reason="$(tail -n 1 "$err")"
+    notify "OCR: failed" "${reason:-Google Lens request failed}"
+    exit 1
+fi

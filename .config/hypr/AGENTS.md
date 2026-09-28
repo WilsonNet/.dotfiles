@@ -54,6 +54,10 @@ The wiki documents "Latest git" by default and is versioned — always check the
 - Layer nudge workaround (Hyprland <= 0.56.2 only, remove once >= 0.57 is installed): disabling a monitor reflows the others without re-arranging their layer surfaces, leaving the quickshell bar at a stale global x (e.g. lid close moves the external 1600→0 while its bar stays at 1600). Fixed upstream by `ab2d313b` ("monitor: fix layer arrangement on layout changes", in 0.57). `apply_monitors()` arms `nudge_layer_arrangement()` on `monitor.layout_changed`; it re-applies each profile monitor's rule with its settled explicit position — a soft change that makes Hyprland re-run `arrangeLayersForMonitor` without moving anything. The explicit position is replaced by the profile's `position = "auto"` on the next `apply_monitors()`.
 - Any new display setups must be added to `PROFILES` and the detection strings in `apply_monitors()` (`monitor_connected(...)` matches on monitor description substrings).
 
+## Screen OCR (SUPER + SHIFT + S)
+
+`bin/ocr-lens` (symlinked to `~/bin/ocr-lens`): slurp region select → grim capture → one-shot **Japanese** OCR with Google Lens via owocr (`bin/ocr-lens-engine.py`, the same "glens" engine GameSentenceMiner uses by default) → clipboard + notify-send status. Fresh-install dependencies are listed in the `bin/ocr-lens` header: system `slurp grim wl-clipboard libnotify jq`; Python engine `uv tool install --python 3.13 --with regex 'owocr[lens]'` (the script locates the interpreter through the `owocr` executable). Test the engine standalone: `~/.local/share/uv/tools/owocr/bin/python bin/ocr-lens-engine.py <image>`.
+
 ## Quickshell Bar (replaced Waybar in Sep 2026)
 
 **Read the `quickshell` opencode skill first** (`.opencode/skills/quickshell`, project-local to `~/.config/hypr`) — dev loop, verified API gotchas, and the test harness live there.
