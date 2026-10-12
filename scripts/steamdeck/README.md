@@ -7,6 +7,23 @@ repo is checked out. They talk to the same files your SFTP session sees under
 They are plain bash and use only tools that SteamOS already ships (ffmpeg,
 python3, find, ...), so nothing has to be installed.
 
+## TL;DR
+
+Run these from this folder on your local machine; the scripts execute on the
+Deck over SSH and print their progress in your terminal:
+
+```sh
+# Convert new game recordings into ~/Videos on the Deck
+ssh deck@steamdeck 'bash -s' < extract-steam-recordings.sh
+
+# Collect new screenshots into ~/Screenshots on the Deck
+ssh deck@steamdeck 'bash -s' < copy-screenshots.sh
+```
+
+Both are safe to re-run: only files modified after 2026-10-11 are processed,
+already exported files are skipped. See [Environment overrides](#environment-overrides)
+for `SINCE`, `OUTPUT_DIR`, `STEAM_ROOT`.
+
 ## Running a script
 
 ### Option 1: pipe it over SSH (nothing to copy, recommended)
@@ -66,11 +83,13 @@ copy, so the video and audio are not re-encoded and lose no quality.
 - Output: one `.mp4` per session in `/home/deck/Videos`
 - Filename: `Hades II_20250601_093500.mp4`, `Hades II_clip_20250602_101000.mp4`
   (game name resolved locally from Steam metadata, appid used when unknown)
+- Only sessions modified after 2026-10-11 are converted; set `SINCE` to widen
+  the range
 - Safe to re-run: finished files are skipped, and a background recording that is
   still active (files changed in the last 2 minutes) is left alone
 - Fails soft: a broken session is reported as `FAILED`, everything else continues
-- Env: `OUTPUT_DIR` (default `~/Videos`), `STEAM_ROOT` (default
-  `~/.local/share/Steam`)
+- Env: `OUTPUT_DIR` (default `~/Videos`), `SINCE` (default `2026-10-11`),
+  `STEAM_ROOT` (default `~/.local/share/Steam`)
 
 ## copy-screenshots.sh
 
@@ -80,16 +99,16 @@ Collects screenshots into one folder:
 - Desktop screenshots: `Screenshot_*` files under `~/Pictures`, plus everything
   in `~/Pictures/Screenshots` and `~/Pictures/Steam Screenshots`
 
-Files modified since 2025-01-01 are copied flat into `/home/deck/Screenshots`,
+Files modified after 2026-10-11 are copied flat into `/home/deck/Screenshots`,
 with the game name prefixed to the filename so they stay tellable apart, e.g.
 `Portal 2_20250601120000_1.jpg`. Unknown appids use their numeric id as the
 prefix, desktop screenshots use `Desktop_` (e.g.
 `Desktop_Screenshot_20250301_120000.png`). Existing files are skipped and
 nothing is ever deleted, so it is safe to run repeatedly.
 
-- Env: `OUTPUT_DIR` (default `~/Screenshots`), `SINCE` (default `2025-01-01`),
+- Env: `OUTPUT_DIR` (default `~/Screenshots`), `SINCE` (default `2026-10-11`),
   `STEAM_ROOT`
-- Example: only 2026 screenshots, into a different folder:
+- Example: also re-scan earlier 2026 screenshots into a different folder:
   `ssh deck@steamdeck 'SINCE=2026-01-01 OUTPUT_DIR=/home/deck/Screenshots2026 bash -s' < copy-screenshots.sh`
 
 ## Notes

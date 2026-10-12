@@ -4,6 +4,7 @@ set -euo pipefail
 OUTPUT_DIR="${OUTPUT_DIR:-$HOME/Videos}"
 STEAM_ROOT="${STEAM_ROOT:-$HOME/.local/share/Steam}"
 USERDATA_DIR="$STEAM_ROOT/userdata"
+SINCE="${SINCE:-2026-10-11}"
 
 usage() {
     cat <<'EOF'
@@ -11,9 +12,10 @@ Convert Steam Game Recording sessions (.m4s DASH fragments) into .mp4 files.
 
 Usage: extract-steam-recordings.sh
 
-Run this on the Steam Deck. It finds every recording session under
-~/.local/share/Steam/userdata/*/gamerecordings (background recordings and
-saved clips) and muxes the fragments into <session-name>.mp4 inside ~/Videos.
+Run this on the Steam Deck. It finds every recording session modified after
+2026-10-11 under ~/.local/share/Steam/userdata/*/gamerecordings (background
+recordings and saved clips) and muxes the fragments into <session-name>.mp4
+inside ~/Videos. Older sessions are ignored; set SINCE to change the cutoff.
 Sessions that are already converted are skipped, ffmpeg does a lossless
 stream copy (no re-encode).
 
@@ -23,6 +25,7 @@ Otherwise the raw session folder name is kept.
 
 Env overrides:
   OUTPUT_DIR  output folder (default: ~/Videos)
+  SINCE       only convert sessions modified after this date (default: 2026-10-11)
   STEAM_ROOT  Steam install dir (default: ~/.local/share/Steam)
 EOF
 }
@@ -188,7 +191,7 @@ while IFS= read -r -d '' mpd; do
         echo "FAILED"
         failed=$((failed + 1))
     fi
-done < <(find "$USERDATA_DIR" -type f -name session.mpd -print0 | sort -z)
+done < <(find "$USERDATA_DIR" -type f -name session.mpd -newermt "$SINCE" -print0 | sort -z)
 
 echo
 echo "done: $converted converted, $skipped skipped, $failed failed"
