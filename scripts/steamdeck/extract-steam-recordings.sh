@@ -21,6 +21,8 @@ stream copy (no re-encode).
 
 When the game is known locally, the file is named after it, e.g.
 "Hades II_20250601_093500.mp4" or "Hades II_clip_20250602_101000.mp4".
+The timestamp of a saved clip is the clip's own, not the start of the background
+recording it was cut from, so several clips from one recording stay distinct.
 Otherwise the raw session folder name is kept.
 
 Env overrides:
@@ -162,13 +164,30 @@ convert_session() {
     mv "$out.part" "$out"
 }
 
+# A standalone recording lives in gamerecordings/video/<session>/session.mpd, but
+# a saved clip contains its own copy of the background session it was cut from:
+# gamerecordings/clips/<clip>/video/<bg-session>/session.mpd. The <bg-session>
+# name is the same for every clip taken from one recording, so use the enclosing
+# <clip> folder name instead or all clips collide on a single output file.
+session_name() {
+    local dir="$1" parent="${1%/*}" holder
+    if [[ ${parent##*/} == video ]]; then
+        holder="${parent%/*}"
+        if [[ ${holder##*/} == clip_* && ${holder%/*} == */clips ]]; then
+            printf '%s\n' "${holder##*/}"
+            return
+        fi
+    fi
+    printf '%s\n' "${dir##*/}"
+}
+
 converted=0
 skipped=0
 failed=0
 
 while IFS= read -r -d '' mpd; do
     dir="${mpd%/*}"
-    session="${dir##*/}"
+    session=$(session_name "$dir")
     fname=$(output_name "$session")
     out="$OUTPUT_DIR/$fname"
 

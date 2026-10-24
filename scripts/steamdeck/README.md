@@ -82,7 +82,9 @@ copy, so the video and audio are not re-encoded and lose no quality.
 
 - Output: one `.mp4` per session in `/home/deck/Videos`
 - Filename: `Hades II_20250601_093500.mp4`, `Hades II_clip_20250602_101000.mp4`
-  (game name resolved locally from Steam metadata, appid used when unknown)
+  (game name resolved locally from Steam metadata, appid used when unknown).
+  Saved clips use the clip's own timestamp, so several clips cut from the same
+  background recording get one file each instead of overwriting the same name
 - Only sessions modified after 2026-10-11 are converted; set `SINCE` to widen
   the range
 - Safe to re-run: finished files are skipped, and a background recording that is
