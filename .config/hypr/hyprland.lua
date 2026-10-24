@@ -293,6 +293,9 @@ hl.config({
 
         touchpad = {
             natural_scroll = false,
+            -- Keep the touchpad usable while typing (e.g. moving the cursor
+            -- with a key held down). Hyprland/libinput defaults this to true.
+            disable_while_typing = false,
         },
     },
 })
