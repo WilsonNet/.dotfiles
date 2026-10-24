@@ -85,10 +85,6 @@ if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
 
-
-# Added by Antigravity CLI installer
-export PATH="/Users/wilsonneto/.local/bin:$PATH"
-
 # Android development (Droid Sentence Miner)
 export JAVA_HOME="$HOME/Android/tools/jdk-21.0.12.1+1"
 export ANDROID_HOME="$HOME/Android/Sdk"
