@@ -88,3 +88,9 @@ fi
 
 # Added by Antigravity CLI installer
 export PATH="/Users/wilsonneto/.local/bin:$PATH"
+
+# Android development (Droid Sentence Miner)
+export JAVA_HOME="$HOME/Android/tools/jdk-21.0.12.1+1"
+export ANDROID_HOME="$HOME/Android/Sdk"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export PATH="$HOME/.local/bin:$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
