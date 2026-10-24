@@ -20,9 +20,10 @@ ssh deck@steamdeck 'bash -s' < extract-steam-recordings.sh
 ssh deck@steamdeck 'bash -s' < copy-screenshots.sh
 ```
 
-Both are safe to re-run: only files modified after 2026-10-11 are processed,
-already exported files are skipped. See [Environment overrides](#environment-overrides)
-for `SINCE`, `OUTPUT_DIR`, `STEAM_ROOT`.
+Both are safe to re-run: only files modified since 2026-10-23 are processed
+(set `SINCE` to widen the range), already exported files are skipped. See
+[Environment overrides](#environment-overrides) for `SINCE`, `OUTPUT_DIR`,
+`STEAM_ROOT`.
 
 ## Running a script
 
@@ -85,12 +86,12 @@ copy, so the video and audio are not re-encoded and lose no quality.
   (game name resolved locally from Steam metadata, appid used when unknown).
   Saved clips use the clip's own timestamp, so several clips cut from the same
   background recording get one file each instead of overwriting the same name
-- Only sessions modified after 2026-10-11 are converted; set `SINCE` to widen
+- Only sessions modified since 2026-10-23 are converted; set `SINCE` to widen
   the range
 - Safe to re-run: finished files are skipped, and a background recording that is
   still active (files changed in the last 2 minutes) is left alone
 - Fails soft: a broken session is reported as `FAILED`, everything else continues
-- Env: `OUTPUT_DIR` (default `~/Videos`), `SINCE` (default `2026-10-11`),
+- Env: `OUTPUT_DIR` (default `~/Videos`), `SINCE` (default `2026-10-23`),
   `STEAM_ROOT` (default `~/.local/share/Steam`)
 
 ## copy-screenshots.sh
@@ -101,14 +102,14 @@ Collects screenshots into one folder:
 - Desktop screenshots: `Screenshot_*` files under `~/Pictures`, plus everything
   in `~/Pictures/Screenshots` and `~/Pictures/Steam Screenshots`
 
-Files modified after 2026-10-11 are copied flat into `/home/deck/Screenshots`,
+Files modified since 2026-10-23 are copied flat into `/home/deck/Screenshots`,
 with the game name prefixed to the filename so they stay tellable apart, e.g.
 `Portal 2_20250601120000_1.jpg`. Unknown appids use their numeric id as the
 prefix, desktop screenshots use `Desktop_` (e.g.
 `Desktop_Screenshot_20250301_120000.png`). Existing files are skipped and
 nothing is ever deleted, so it is safe to run repeatedly.
 
-- Env: `OUTPUT_DIR` (default `~/Screenshots`), `SINCE` (default `2026-10-11`),
+- Env: `OUTPUT_DIR` (default `~/Screenshots`), `SINCE` (default `2026-10-23`),
   `STEAM_ROOT`
 - Example: also re-scan earlier 2026 screenshots into a different folder:
   `ssh deck@steamdeck 'SINCE=2026-01-01 OUTPUT_DIR=/home/deck/Screenshots2026 bash -s' < copy-screenshots.sh`

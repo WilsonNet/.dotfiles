@@ -4,11 +4,11 @@ set -euo pipefail
 OUTPUT_DIR="${OUTPUT_DIR:-$HOME/Screenshots}"
 STEAM_ROOT="${STEAM_ROOT:-$HOME/.local/share/Steam}"
 USERDATA_DIR="$STEAM_ROOT/userdata"
-SINCE="${SINCE:-2026-10-11}"
+SINCE="${SINCE:-2026-10-23}"
 
 usage() {
     cat <<'EOF'
-Copy Steam and desktop screenshots modified after 2026-10-11 into one folder.
+Copy Steam and desktop screenshots modified since 2026-10-23 into one folder.
 
 Usage: copy-screenshots.sh
 
@@ -25,7 +25,8 @@ skipped; nothing is deleted.
 
 Env overrides:
   OUTPUT_DIR  destination folder (default: ~/Screenshots)
-  SINCE       only copy files modified after this date (default: 2026-10-11)
+  SINCE       only copy files modified after this date (default: 2026-10-23,
+              any date accepted by find -newermt, e.g. 2026-01-01)
   STEAM_ROOT  Steam install dir (default: ~/.local/share/Steam)
 EOF
 }

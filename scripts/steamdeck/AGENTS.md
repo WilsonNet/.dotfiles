@@ -36,6 +36,10 @@ Not available: yt-dlp, mpv, vlc, wl-clipboard, power-profiles-daemon, yay/AUR.
 - Expose paths as env overrides (`OUTPUT_DIR`, `STEAM_ROOT`, ...) so behavior can be
   tested locally with fixtures.
 - Be idempotent: skip finished work, write to a `.part`/temp file and rename on success.
+- Date cutoffs are fixed absolute dates, never relative expressions: when asked for
+  something "starting yesterday" (or any other relative window), resolve it to that
+  calendar date (e.g. `2026-10-23`) and hardcode the literal as the `SINCE` default.
+  Bump the script default, its usage text and the README together.
 - Keep media processing lossless (`ffmpeg -c copy`) unless re-encoding is requested.
 - Test locally with synthetic fixtures. `ffmpeg -f dash` produces exactly the
   `init-stream0.m4s` + `chunk-stream0-*.m4s` layout Steam uses; verify results with
@@ -53,6 +57,10 @@ Not available: yt-dlp, mpv, vlc, wl-clipboard, power-profiles-daemon, yay/AUR.
   mp4: concatenate init + chunks per stream and mux with ffmpeg (`-c copy`).
 - A `bg_*` session whose files changed in the last ~2 minutes is still recording,
   do not convert it.
+- Saved clips nest their own copy of the source recording:
+  `clips/<clip_...>/video/<bg_...>/session.mpd` (plus `clip.pb`, `thumbnail.jpg`).
+  The inner `bg_` name is identical for every clip cut from one recording, so name
+  the output after the enclosing `clip_` folder, never the inner `bg_` one.
 - Resolve game names from local metadata: `steamapps/appmanifest_<appid>.acf`
   (`"name"` field) in every library folder listed in `steamapps/libraryfolders.vdf`
   (covers the SD card); non-Steam shortcuts live in binary VDF
