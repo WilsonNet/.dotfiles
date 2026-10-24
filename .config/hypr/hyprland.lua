@@ -488,5 +488,20 @@ hl.window_rule({
     match            = { class = "^(Ardour.*)$" },
     no_initial_focus = true,
 })
+
+-- Tracker (dev build): open on a hidden special workspace.
+-- The " silent" suffix is required: without it, mapping a window into a special
+-- workspace calls setSpecialWorkspace() and shows it (scratchpad behaviour).
+hl.workspace_rule({
+    workspace  = "special:tracker",
+    persistent = true,
+})
+
+hl.window_rule({
+    name             = "tracker-dev-workspace",
+    match            = { class = "^(tracker)$" },
+    workspace        = "special:tracker silent",
+    no_initial_focus = true,
+})
 -- reload-test-1
 -- reload-test-2
