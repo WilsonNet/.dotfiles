@@ -20,9 +20,6 @@
 		"bash": "ask",
 		"websearch": "allow"
 	},
-	"plugin": [
-		"./plugins/rtk.ts"
-	],
 	"agent": {
 		"explore": {
 			"model": "opencode-go/deepseek-v4-flash"
