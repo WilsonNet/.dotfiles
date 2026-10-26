@@ -133,6 +133,39 @@ readonly property var connectedWifi: wifi ? wifi.networks.values.find(n => n.con
 // IPv4 for wired: Process ["nmcli","-t","-g","IP4.ADDRESS","device","show", iface]
 ```
 
+Switching networks (`widgets/NetworkStatus.qml` + `WifiPasswordDialog.qml`):
+
+```qml
+// scan: enable while the picker is open, disable when it closes
+wifi.scannerEnabled = true            // populates wifi.networks.values (deduped per SSID)
+Networking.wifiEnabled = false        // radio toggle, no polkit prompt for the session user
+
+// networks have: name known connected state signalStrength security
+//   state: ConnectionState.* (Connecting 1, Connected 2, Disconnected 4)
+//   security: WifiSecurityType.* (Open / Owe need no passphrase)
+network.connect()                     // saved profile (uses its stored PSK)
+network.connectWithPsk("secret")      // updates the existing profile's PSK, else creates one
+network.disconnect() / network.forget()   // forget deletes the NM profile
+
+// failures arrive as a signal on the network object:
+Connections {
+    target: wifiNetwork
+    function onConnectionFailed(reason) { /* ConnectionFailReason.* */ }
+    function onConnectedChanged() { /* activation finished */ }
+}
+```
+
+Gotchas: passphrases need real typing, and bar `PopupWindow`s cannot take keys —
+put the prompt in a full-screen `PanelWindow` (`WlrLayer.Overlay` +
+`WlrKeyboardFocus.Exclusive`, `ShellRoot`-level or nested in the widget) with a
+`TextInput`; see `WifiPasswordDialog.qml` (shortcuts overlay is the same trick).
+A failed `device wifi connect` leaves an NM profile behind, so retrying with
+`connectWithPsk` updates that profile rather than piling up duplicates — but the
+network then reports `known: true`, so offer `forget()` for "wrong password"
+retries. Testing tip: `nmcli radio wifi off` disconnects the machine — always
+pair it with `nmcli radio wifi on` in the same command, and it deletes every
+network object (see the ListView gotcha in the skill).
+
 ## Responsive layout / overflowing text
 
 The bar is three independent rows in `PanelWindow`; anchored rows grow toward the

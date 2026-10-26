@@ -5,7 +5,7 @@ description: Develop, debug, and extend the Quickshell desktop shell/bar (QML) o
 
 # Quickshell Development (this machine)
 
-Quickshell 0.3.1 (Arch `extra`) is the Hyprland bar since Sep 2026, replacing Waybar (which stays installed, disabled, as a fallback; its config is untouched at `~/.config/waybar`).
+Quickshell 0.3.2 (Arch `extra`) is the Hyprland bar since Sep 2026, replacing Waybar (which stays installed, disabled, as a fallback; its config is untouched at `~/.config/waybar`).
 
 - Config: `~/.config/quickshell` → symlink to `~/.dotfiles/.config/quickshell` (tracked in dotfiles).
 - Autostart: `hyprland.lua` runs `quickshell -n` (dedupe) after `apply_monitors()`.
@@ -17,8 +17,8 @@ This skill holds the workflow, the API gotchas that cost real debugging time, an
 
 Check data before trusting memory; 0.3.x changes fast.
 
-- **Official docs (versioned)**: https://quickshell.org/docs/v0.3.1/ — the site defaults to the docs of the latest release, so always match the version selector to `quickshell --version`. Type reference index: https://quickshell.org/docs/v0.3.1/types/ (e.g. `Quickshell.Services.Pipewire/PwNodeAudio`).
-- **Sizing/layout guide (read before touching bar layout)**: https://quickshell.org/docs/v0.3.1/guide/size-position — implicit size flows child→parent, actual size parent→child; `childrenRect` as a size source is a binding-loop trap; docs recommend `RowLayout`/`ColumnLayout` over `Row`/`Column`.
+- **Official docs (versioned)**: https://quickshell.org/docs/v0.3.2/ — the site defaults to the docs of the latest release, so always match the version selector to `quickshell --version`. Type reference index: https://quickshell.org/docs/v0.3.2/types/ (e.g. `Quickshell.Services.Pipewire/PwNodeAudio`).
+- **Sizing/layout guide (read before touching bar layout)**: https://quickshell.org/docs/v0.3.2/guide/size-position — implicit size flows child→parent, actual size parent→child; `childrenRect` as a size source is a binding-loop trap; docs recommend `RowLayout`/`ColumnLayout` over `Row`/`Column`.
 - **Changelog / breaking changes**: https://quickshell.org/changelog/
 - **Installed stubs (exact ground truth for this machine)**: `/usr/lib/qt6/qml/Quickshell/**/*.qmltypes` — grep property/method/signal names, e.g. `rg "activeToplevel" /usr/lib/qt6/qml/Quickshell/`.
 - **Official examples**: https://github.com/quickshell-mirror/quickshell-examples
@@ -46,6 +46,26 @@ Check data before trusting memory; 0.3.x changes fast.
 4. Live introspection: `qs ipc call debug activeWindow` / `qs ipc call debug workspaces`. Add temporary functions to the `IpcHandler` in `shell.qml` to dump widget state, then remove them.
 5. Visual verification: `grim` + crops, see `references/testing.md`.
 
+### Crashes
+
+A QML bug can take the whole binary down (not just the module): Quickshell's crash
+handler dumps a report and then **auto-restarts the shell**, which closes every
+popup and rebuilds the bar. Symptom: a click that worked a second ago does
+nothing, widgets "reset", and the log says `Quickshell has crashed under pid N`.
+
+- Reports: `~/.cache/quickshell/crashes/<id>/report.txt` — version/build info,
+  full stack trace (`#0` is the fault) and a **log tail** with the DBus/QML
+  events leading up to it. List them with `ls -lat ~/.cache/quickshell/crashes/`.
+- Check for new reports after any risky change: `ls -d ~/.cache/quickshell/crashes/*/ | wc -l`.
+- After a crash-restart, a stale Hyprland focus grab can swallow bar clicks until
+  the next clean `pkill -x quickshell` + restart — don't debug missing clicks on
+  a shell that recently crashed, restart it first.
+- `qs log` is the same binary: each invocation leaves a `quickshell` child process
+  attached to the instance, and its output mixes into whatever file you redirected
+  stdout to. Prefer reading the log file the instance prints on startup
+  (`/run/user/1000/quickshell/by-id/<id>/log.qslog`) when you need a clean,
+  unattended run.
+
 ### qmllint setup
 
 `import qs.*` is Quickshell-specific; qmllint needs an import shim:
@@ -65,6 +85,7 @@ If a file crashes qmllint, bisect for these two before blaming the config.
 
 ## Verified gotchas
 
+- **Never feed live Quickshell service objects to a `ListView`/`Repeater` model.** A QML array of `WifiNetwork`/`PwNode`-style QObjects that the service destroys (e.g. NetworkManager deletes every network when the radio goes off) crashes the whole shell inside `QQuickItemView::setModel` / `QQmlIncubator` while delegates are rebuilt over the dead objects — verified on 0.3.2, twice. Snapshot plain values into the model (`{ name, known, connected, ... }`) and resolve the live object by name/id in the click handler. Also don't swap the model to `[]` on a radio/power state change; hide the view instead.
 - `Text.font.families` **does not exist**; use `font.family`. `Theme.fontFamily` is `"Font Awesome 7 Free Solid"` so FA codepoints resolve before fontconfig fallback — with a text font first, `\uF001` (music) and `\uF796` (ethernet) rendered as wrong glyphs/tofu. CJK/emoji/backlight glyphs still fall back correctly.
 - `FileView.text()` is a **method**, not a property: `onLoaded: value = parseInt(file.text())`. `watchChanges: true` + `onFileChanged: reload()` works on sysfs (`/sys/class/backlight/...`, `/sys/class/thermal/...`).
 - `Hyprland.activeToplevel` stays `null` until a focus event fires (broken at shell startup). Use `ToplevelManager.activeToplevel` (`Quickshell.Wayland`) for the focused window; `Hyprland.focusedWorkspace`, `Hyprland.workspaces`, `Hyprland.toplevels` are reliable.
