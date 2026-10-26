@@ -104,8 +104,9 @@ file).
   centered text change; long titles elide, never overlap pills.
 - **Media**: pill appears when an MPRIS player exists (Brave does), hidden
   when none; click toggles when the player supports it.
-- **Volume**: scroll changes `wpctl get-volume` by 1%; mute/unmute via wpctl
-  updates the pill live; click opens pavucontrol.
+- **Volume**: scroll changes `wpctl get-volume` by 1%; left click toggles mute
+  (pill turns grey + muted icon, width stays put so a second click lands on the
+  same pill); right click focuses/launches pavucontrol.
 - **Timer**: wheel up creates/increases, wheel down decreases, right click
   pauses (`alt: "paused"`), middle click cancels (`alt: "standby"`).
 - **Network**: `nmcli networking off` → red "Disconnected ⚠"; back on →

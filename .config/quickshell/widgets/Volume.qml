@@ -19,19 +19,21 @@ Pill {
     bg: muted ? Theme.surface1 : Theme.alpha(Theme.maroon, 0.75)
     interactive: true
     tooltip: root.muted
-        ? `Muted \u00B7 Mic ${Math.round(root.micVolume * 100)}%`
-        : `Output ${Math.round(root.sinkVolume * 100)}% \u00B7 Mic ${Math.round(root.micVolume * 100)}%`
+        ? `Muted \u00B7 Mic ${Math.round(root.micVolume * 100)}% \u00B7 Click to unmute`
+        : `Output ${Math.round(root.sinkVolume * 100)}% \u00B7 Mic ${Math.round(root.micVolume * 100)}% \u00B7 Click to mute`
 
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource]
     }
 
     Text {
+        // The percentage stays visible while muted so the pill keeps its width:
+        // a shrinking pill slides out from under the cursor mid-click.
         text: {
             const micIcon = root.micMuted ? "\uF131" : "\uF130";
-            if (root.muted)
-                return `\uF6A9 ${micIcon}`;
-            const icon = root.volumeIcons[Math.min(2, Math.floor(root.sinkVolume * 3))];
+            const icon = root.muted
+                ? "\uF6A9"
+                : root.volumeIcons[Math.min(2, Math.floor(root.sinkVolume * 3))];
             return `${Math.round(root.sinkVolume * 100)}% ${icon} ${Math.round(root.micVolume * 100)}% ${micIcon}`;
         }
         color: root.muted ? Theme.text : Theme.base
@@ -39,7 +41,15 @@ Pill {
         font.family: Theme.fontFamily
     }
 
-    onClicked: Quickshell.execDetached(["pavucontrol"])
+    onClicked: {
+        if (root.sinkAudio)
+            root.sinkAudio.muted = !root.sinkAudio.muted;
+    }
+    // Focus an already-running mixer (pavucontrol cannot raise itself across
+    // workspaces); only spawn it when no window exists yet.
+    onRightClicked: Quickshell.execDetached(["sh", "-c",
+        "hyprctl dispatch 'hl.dsp.focus({ window = \"class:org.pulseaudio.pavucontrol\" })' >/dev/null 2>&1; " +
+        "hyprctl activewindow -j | grep -q pavucontrol || pavucontrol"])
     onScrolled: (delta) => {
         if (!sinkAudio)
             return;
