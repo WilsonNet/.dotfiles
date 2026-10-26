@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# wifi-watchdog - restart NetworkManager's autoconnect when it has given up.
+#
+# NetworkManager only makes a few autoconnect attempts per round and then sits
+# idle.  When the AP vanishes for a minute or two (cheap router rebooting, DFS
+# radar event on channel 124, repeater re-pairing) the machine stays offline
+# until somebody clicks the network icon.  This script notices a Wi-Fi device
+# that is stuck disconnected and restarts the autoconnect round, escalating to
+# a full unmanage/remanage cycle if that does not help.
+#
+# Driven by wifi-watchdog.timer (user unit, every minute).  No root needed:
+# nmcli is allowed for the active session through polkit.
+#
+# Tunables: WIFI_DEV, FAIL_THRESHOLD (checks before acting, default 2).
+
+set -uo pipefail
+export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
+
+THRESHOLD=${FAIL_THRESHOLD:-2}
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/wifi-watchdog"
+mkdir -p "$state_dir"
+counter="$state_dir/failures"
+
+log() { echo "wifi-watchdog: $*"; }
+notify() {
+    command -v notify-send >/dev/null 2>&1 || return 0
+    notify-send -a "Wi-Fi watchdog" "$@" 2>/dev/null || true
+}
+
+dev="${WIFI_DEV:-$(nmcli -t -f DEVICE,TYPE device status 2>/dev/null |
+    awk -F: '$2=="wifi" {print $1; exit}')}"
+if [ -z "${dev:-}" ]; then
+    log "no Wi-Fi device present, nothing to do"
+    exit 0
+fi
+
+# "wlp1s0:connected"
+state=$(nmcli -t -f DEVICE,STATE device status 2>/dev/null |
+    awk -F: -v d="$dev" '$1==d {print $2}')
+fails=$(cat "$counter" 2>/dev/null || echo 0)
+case "$fails" in ''|*[!0-9]*) fails=0 ;; esac
+
+healthy() {
+    local prev=$fails
+    echo 0 >"$counter"
+    if [ "$prev" -ge "$THRESHOLD" ]; then
+        log "recovered after $prev failed checks"
+        notify -u low "Wi-Fi back up on $dev"
+    fi
+    exit 0
+}
+
+# nmcli reports transitional states with a suffix, e.g. "connecting (configuring)".
+case "${state:-missing}" in
+    connected*|connecting*|deactivating*) healthy ;;
+esac
+
+fails=$((fails + 1))
+echo "$fails" >"$counter"
+log "state=${state:-missing} failed checks=$fails/$THRESHOLD"
+
+if [ "$fails" -lt "$THRESHOLD" ]; then
+    exit 0
+fi
+
+# First escalation: nudge the radio, rescan and restart autoconnect.
+if [ "$fails" -eq "$THRESHOLD" ]; then
+    nmcli radio wifi on 2>/dev/null
+    nmcli device wifi rescan 2>/dev/null
+    nmcli device connect "$dev" 2>/dev/null
+    log "asked NetworkManager to reconnect"
+    notify -u normal "Wi-Fi dropped, reconnecting to $dev"
+    exit 0
+fi
+
+# Second escalation: unmanage/remanage to reset the supplicant state machine.
+if [ $((fails % (THRESHOLD * 2))) -eq 0 ]; then
+    log "recycling $dev (unmanage/remanage)"
+    nmcli device set "$dev" managed no 2>/dev/null
+    sleep 2
+    nmcli device set "$dev" managed yes 2>/dev/null
+    nmcli device connect "$dev" 2>/dev/null
+    exit 0
+fi
+
+# Sticky failure: tell the human, the driver probably wedged.
+if [ "$fails" -eq $((THRESHOLD * 5)) ]; then
+    log "still down after $fails checks; driver reload may be needed"
+    notify -u critical "Wi-Fi still down after ~5 min" \
+        "The network card may have wedged. Run: sudo modprobe -r rtw89_8852be && sudo modprobe rtw89_8852be"
+fi
+
+exit 0

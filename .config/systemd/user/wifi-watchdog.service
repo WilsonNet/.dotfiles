@@ -1,0 +1,7 @@
+[Unit]
+Description=Re-trigger Wi-Fi autoconnect when NetworkManager has given up
+Documentation=file:%h/.dotfiles/bin/wifi-watchdog
+
+[Service]
+Type=oneshot
+ExecStart=%h/bin/wifi-watchdog
