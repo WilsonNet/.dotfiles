@@ -104,9 +104,12 @@ file).
   centered text change; long titles elide, never overlap pills.
 - **Media**: pill appears when an MPRIS player exists (Brave does), hidden
   when none; click toggles when the player supports it.
-- **Volume**: scroll changes `wpctl get-volume` by 1%; left click toggles mute
-  (pill turns grey + muted icon, width stays put so a second click lands on the
-  same pill); right click focuses/launches pavucontrol.
+- **Volume**: scroll changes `wpctl get-volume` by 1%; left click on the left
+  half toggles the sink mute, on the right half the source mute (pill turns
+  grey + muted icon, width stays put so a second click lands on the same pill);
+  the tooltip follows the hovered half; right click focuses/launches
+  pavucontrol. Mute changed from outside (`pactl set-sink-mute …`) must update
+  the pill within ~1 s — the widget binds to `PwNodeAudio.muted`.
 - **Timer**: wheel up creates/increases, wheel down decreases, right click
   pauses (`alt: "paused"`), middle click cancels (`alt: "standby"`).
 - **Network**: `nmcli networking off` → red "Disconnected ⚠"; back on →

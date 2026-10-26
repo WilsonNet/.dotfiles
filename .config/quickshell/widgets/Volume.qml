@@ -15,12 +15,21 @@ Pill {
     readonly property real micVolume: sourceAudio ? sourceAudio.volume : 0
     readonly property bool micMuted: sourceAudio ? sourceAudio.muted : false
     readonly property var volumeIcons: ["\uF026", "\uF027", "\uF028"]
+    // The pill reads "output mic": the left half targets the sink, the right
+    // half the source, matching what is drawn under the cursor.
+    readonly property bool overMic: root.mouseX >= root.width / 2
 
     bg: muted ? Theme.surface1 : Theme.alpha(Theme.maroon, 0.75)
     interactive: true
-    tooltip: root.muted
-        ? `Muted \u00B7 Mic ${Math.round(root.micVolume * 100)}% \u00B7 Click to unmute`
-        : `Output ${Math.round(root.sinkVolume * 100)}% \u00B7 Mic ${Math.round(root.micVolume * 100)}% \u00B7 Click to mute`
+    tooltip: {
+        const target = root.overMic ? "Mic" : "Output";
+        const level = root.overMic
+            ? `${Math.round(root.micVolume * 100)}%`
+            : `${Math.round(root.sinkVolume * 100)}%`;
+        const isMuted = root.overMic ? root.micMuted : root.muted;
+        const action = isMuted ? "Click to unmute" : "Click to mute";
+        return `${target} ${level} \u00B7 ${action} \u00B7 Right-click: mixer`;
+    }
 
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource]
@@ -41,9 +50,10 @@ Pill {
         font.family: Theme.fontFamily
     }
 
-    onClicked: {
-        if (root.sinkAudio)
-            root.sinkAudio.muted = !root.sinkAudio.muted;
+    onClicked: (x) => {
+        const node = x < root.width / 2 ? root.sinkAudio : root.sourceAudio;
+        if (node)
+            node.muted = !node.muted;
     }
     // Focus an already-running mixer (pavucontrol cannot raise itself across
     // workspaces); only spawn it when no window exists yet.

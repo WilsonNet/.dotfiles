@@ -5,6 +5,7 @@ Item {
 
     default property alias content: inner.data
     property alias hovered: mouse.containsMouse
+    readonly property real mouseX: mouse.mouseX
     property color bg: "transparent"
     property color fg: Theme.base
     property color hoverColor: Theme.mauve
@@ -13,7 +14,7 @@ Item {
     property string tooltip: ""
     property bool tooltipCalendar: false
 
-    signal clicked()
+    signal clicked(real x)
     signal rightClicked()
     signal middleClicked()
     signal scrolled(int delta)
@@ -53,13 +54,20 @@ Item {
         onExited: Tooltip.hide(root)
         onClicked: (e) => {
             if (e.button === Qt.LeftButton)
-                root.clicked();
+                root.clicked(e.x);
             else if (e.button === Qt.RightButton)
                 root.rightClicked();
             else if (e.button === Qt.MiddleButton)
                 root.middleClicked();
         }
         onWheel: (e) => root.scrolled(e.angleDelta.y)
+    }
+
+    // Keep the tooltip live when its text depends on hover position
+    // (e.g. Volume's per-half hints).
+    onTooltipChanged: {
+        if (mouse.containsMouse)
+            Tooltip.show(root, root.tooltip, root.tooltipCalendar);
     }
 
     Item {
