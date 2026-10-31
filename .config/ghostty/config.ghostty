@@ -1,0 +1,3 @@
+# Leave Ctrl+Enter to Hyprland / the child application instead of Ghostty's
+# default toggle_fullscreen binding.
+keybind = ctrl+enter=unbind
