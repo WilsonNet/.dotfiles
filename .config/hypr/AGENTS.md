@@ -27,7 +27,7 @@ The wiki documents "Latest git" by default and is versioned — always check the
 4. **Testing this config's monitor logic without touching hardware**: the monitor functions are globals on purpose, so you can drive the exact event code path from the shell:
    ```sh
    hyprctl eval 'apply_monitors()'                                        # run the apply logic directly
-   hyprctl eval 'monitor_connected = function(sub) return false end; apply_monitors()'  # simulate unplug
+   hyprctl eval 'external_monitor = function() return nil end; apply_monitors()'  # simulate unplug
    hyprctl reload                                                         # restores real functions after monkey-patching
    ```
    Verify with `pgrep -x quickshell` (PID should NOT change — the shell creates one PanelWindow per screen and handles hotplug natively) and `hyprctl layers`.
@@ -49,10 +49,11 @@ The wiki documents "Latest git" by default and is versioned — always check the
 
 `hyprland.lua` sections: monitor profiles + lid/hotplug management (native Lua, no kanshi or scripts), autostart (`hl.on("hyprland.start")`), `hl.env`, look & feel (`hl.config`, curves, animations), input, keybinds (`hl.bind` + `hl.dsp.*`, incl. group/switch/streaming binds), window rules.
 
-- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile from `hl.get_monitors()` descriptions, checks lid state, applies via `hl.monitor()`. Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer (which also spawns `quickshell -n` once), and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode (`STREAMING` flag). Quickshell is never restarted on these events — it handles hotplug natively.
+- Monitor management: `PROFILES` table (eDP-1 + two office LG externals + 16:9 streaming variants), `apply_monitors()` picks a profile via `profile_for()`/`external_monitor()`, checks lid state, applies via `hl.monitor()`. Any output that is not eDP-1 counts as external, so a brand-new display (the TV, a projector) works with no config edit: it gets its own `preferred` mode at scale 1, keyed by `desc:` (or connector name when the display reports no EDID string). Wired to `monitor.added`/`monitor.removed`, `config.reloaded`, a delayed `hyprland.start` timer (which also spawns `quickshell -n` once), and the lid switch binds. `SUPER + O` toggles streaming 16:9 mode on the LG externals only (`STREAMING` flag). Quickshell is never restarted on these events — it handles hotplug natively.
+- Lid closed + TV connected = TV only (eDP-1 disabled). That is the "watch something on the TV" path; verify with `hyprctl monitors` (only the TV should be listed) and `hyprctl eval 'lid_closed()'`.
 - Behavior: lid closed → eDP-1 disabled, external only; lid open + external → both monitors; no external → eDP-1 only.
 - Layer nudge workaround (Hyprland <= 0.56.2 only, remove once >= 0.57 is installed): disabling a monitor reflows the others without re-arranging their layer surfaces, leaving the quickshell bar at a stale global x (e.g. lid close moves the external 1600→0 while its bar stays at 1600). Fixed upstream by `ab2d313b` ("monitor: fix layer arrangement on layout changes", in 0.57). `apply_monitors()` arms `nudge_layer_arrangement()` on `monitor.layout_changed`; it re-applies each profile monitor's rule with its settled explicit position — a soft change that makes Hyprland re-run `arrangeLayersForMonitor` without moving anything. The explicit position is replaced by the profile's `position = "auto"` on the next `apply_monitors()`.
-- Any new display setups must be added to `PROFILES` and the detection strings in `apply_monitors()` (`monitor_connected(...)` matches on monitor description substrings).
+- New displays need no config change: `external_monitor()` treats every non-eDP-1 output as external and `profile_for()` gives it `mode = "preferred"`, `scale = 1`. Add a `PROFILES` entry (and a `desc:` branch in `profile_for()`) only when a display needs a hand-tuned mode or fractional scale — e.g. a 4K TV at scale 1 is tiny.
 
 ## Screen OCR (SUPER + SHIFT + S)
 

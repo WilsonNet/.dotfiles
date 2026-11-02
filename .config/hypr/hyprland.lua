@@ -14,9 +14,9 @@
 -- Display management is done natively in Lua (no kanshi / bash scripts):
 --   * São Paulo office: LG ULTRAWIDE (3440x1440) - working profile
 --   * Curitiba office:  LG HDR WFHD   (2560x1080) - working profile
---   * TV (HDMI):        Samsung 1080p TV - native 16:9, no streaming variant
+--   * TV (HDMI):        any other display - native mode, no streaming variant
 --   * Streaming:        16:9 modes on the LG externals (SUPER + O)
---   * Lid closed:       eDP-1 disabled, external monitor only
+--   * Lid closed:       eDP-1 disabled, external monitor only (just the TV)
 --   * Lid open:         eDP-1 + external (two monitors)
 --   * No external:      eDP-1 only
 
@@ -26,24 +26,16 @@
 --   hyprctl eval 'monitor_connected = function(sub) return false end; apply_monitors()'
 --   hyprctl reload   # restores the real functions after monkey-patching
 
+-- Hand-tuned profiles. Only the two LG externals need one: everything else
+-- (the TV, a projector, a borrowed monitor) is driven generically by
+-- profile_for() below at its own preferred mode. Add an entry here only when a
+-- display needs a specific mode or fractional scale.
 PROFILES = {
     eDP      = { output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6 },
     sp       = { output = "desc:LG Electronics LG ULTRAWIDE 209AZPU4U744", mode = "3440x1440@84.96", position = "auto", scale = 1.333333 },
     sp16_9   = { output = "desc:LG Electronics LG ULTRAWIDE 209AZPU4U744", mode = "2560x1440@120",   position = "auto", scale = 1.333333 },
     ctb      = { output = "desc:LG Electronics LG HDR WFHD 0x01010101",     mode = "2560x1080@74.99", position = "auto", scale = 1.333333 },
     ctb16_9  = { output = "desc:LG Electronics LG HDR WFHD 0x01010101",     mode = "1920x1080@60",    position = "auto", scale = 1.333333 },
-    -- TV on the HDMI port. Already 16:9 (preferred = 1920x1080@60), so it has
-    -- no 16:9 variant and is never affected by the streaming toggle. Scale 1:
-    -- 1080p needs no fractional scaling (unlike the 1600p laptop panel).
-    -- Audio goes over the same cable through the Radeon HDMI codec (card 0),
-    -- sink alsa_output.pci-0000_03_00.1.HiFi__HDMI2__sink. It only exists when
-    -- that card is on the "HiFi" profile, which WirePlumber remembers; it then
-    -- becomes the default sink while the TV is connected and the laptop
-    -- speakers come back when it is unplugged. If it ever comes up silent,
-    -- re-apply by hand and adjust the level from the bar (click -> pavucontrol):
-    --   pactl set-card-profile alsa_card.pci-0000_03_00.1 HiFi
-    --   pactl set-default-sink alsa_output.pci-0000_03_00.1.HiFi__HDMI2__sink
-    tv       = { output = "desc:Samsung Electric Company SAMSUNG",          mode = "preferred",       position = "auto", scale = 1 },
 }
 
 STREAMING = false
@@ -55,6 +47,61 @@ function monitor_connected(sub)
         end
     end
     return false
+end
+
+-- Profile for one connected monitor, keyed by description so the rule follows
+-- the display across ports (falling back to the connector name when a display
+-- reports no EDID string at all). Returns the profile plus whether it came from
+-- the hand-tuned table above.
+--
+-- Anything that is not one of the LG panels -- the TV, a projector, a borrowed
+-- monitor -- is used at its own preferred mode with scale 1: a 1080p panel
+-- needs no fractional scaling, and `preferred` means we never guess at the
+-- resolution/refresh a new display wants. A 4K TV would want a larger scale;
+-- give it a PROFILES entry if that ever comes up.
+--
+-- TV audio rides the same cable through the Radeon HDMI codec (card 0), sink
+-- alsa_output.pci-0000_03_00.1.HiFi__HDMI2__sink. It only exists while that
+-- card is on the "HiFi" profile, which WirePlumber remembers; it then becomes
+-- the default sink with the TV connected and the laptop speakers come back when
+-- it is unplugged. If it ever comes up silent, re-apply by hand and adjust the
+-- level from the bar (click -> pavucontrol):
+--   pactl set-card-profile alsa_card.pci-0000_03_00.1 HiFi
+--   pactl set-default-sink alsa_output.pci-0000_03_00.1.HiFi__HDMI2__sink
+function profile_for(m)
+    local desc = m.description or ""
+    if desc:find("LG ULTRAWIDE", 1, true) then
+        return STREAMING and PROFILES.sp16_9 or PROFILES.sp, true
+    end
+    if desc:find("LG HDR WFHD", 1, true) then
+        return STREAMING and PROFILES.ctb16_9 or PROFILES.ctb, true
+    end
+    return {
+        output   = desc ~= "" and ("desc:" .. desc) or m.name,
+        mode     = "preferred",
+        position = "auto",
+        scale    = 1,
+        disabled = false,
+    }, false
+end
+
+-- The external display to drive: every output except the internal panel counts
+-- as external, whatever it reports. A hand-tuned LG panel wins when several
+-- displays are connected at once, so plugging the TV in next to an office
+-- monitor keeps the office profile on top. Returns nil when nothing but eDP-1 is
+-- connected.
+function external_monitor()
+    local fallback
+    for _, m in ipairs(hl.get_monitors()) do
+        if m.name ~= PROFILES.eDP.output then
+            local profile, known = profile_for(m)
+            if known then
+                return profile
+            end
+            fallback = fallback or profile
+        end
+    end
+    return fallback
 end
 
 function lid_closed()
@@ -75,24 +122,17 @@ end
 -- hl.monitor() merges with the existing rule for an output, so `disabled`
 -- must always be passed explicitly on both branches.
 function apply_monitors()
-    local ext
-    if monitor_connected("LG ULTRAWIDE") then
-        ext = STREAMING and PROFILES.sp16_9 or PROFILES.sp
-    elseif monitor_connected("LG HDR WFHD") then
-        ext = STREAMING and PROFILES.ctb16_9 or PROFILES.ctb
-    elseif monitor_connected("SAMSUNG") then
-        ext = PROFILES.tv
-    end
+    local ext = external_monitor()
 
     if ext then
         hl.monitor(ext)
         if lid_closed() then
-            hl.monitor({ output = "eDP-1", disabled = true })
+            hl.monitor({ output = PROFILES.eDP.output, disabled = true })
         else
-            hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6, disabled = false })
+            hl.monitor({ output = PROFILES.eDP.output, mode = "preferred", position = "auto", scale = 1.6, disabled = false })
         end
     else
-        hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6, disabled = false })
+        hl.monitor({ output = PROFILES.eDP.output, mode = "preferred", position = "auto", scale = 1.6, disabled = false })
     end
 
     -- Arm the layer-surface nudge (see below) for the next layout change.
@@ -365,7 +405,7 @@ hl.bind(mainMod .. " + G", hl.dsp.group.toggle(), { description = "Groups · Tog
 hl.bind(mainMod .. " + Tab", hl.dsp.group.next(), { description = "Groups · Next in group" })
 hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.group.prev(), { description = "Groups · Previous in group" })
 hl.bind(mainMod .. " + SHIFT + G", hl.dsp.window.move({ out_of_group = true }), { description = "Groups · Remove window from group" })
-hl.bind(mainMod .. " + CTRL + G", hl.dsp.group.lock_active({ action = "toggle" }), { description = "Groups · Lock group" })
+hl.bind(mainMod .. " + CTRL + G", hl.dsp.group.lock(), { description = "Groups · Lock group" })
 
 -- Ames
 hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd("bash /home/wilsonn/bin/ames.sh -s"), { description = "Capture · Add screenshot to Anki" })
@@ -414,8 +454,9 @@ hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tr
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media · Play/pause" })
 hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true, description = "Media · Previous track" })
 
--- Toggle streaming 16:9 mode on the LG external monitors. The TV is already
--- native 16:9, so it is intentionally left out of this (no-op with it connected).
+-- Toggle streaming 16:9 mode on the LG external monitors. Only those two have a
+-- 16:9 variant: the TV (and anything else generic) is already native 16:9, so
+-- with just the TV connected this bind only reports that nothing changed.
 hl.bind(mainMod .. " + O", function()
     if not (monitor_connected("LG ULTRAWIDE") or monitor_connected("LG HDR WFHD")) then
         hl.notification.create({ text = "Streaming mode: no LG external connected", timeout = 3000, icon = "ok" })
