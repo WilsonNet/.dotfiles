@@ -1,0 +1,14 @@
+[mgr]
+prepend_keymap = [
+  { on = [ "c", "b" ], run = '''
+    shell --confirm '
+      if [ "$(uname)" = "Darwin" ]; then
+        osascript -e "set the clipboard to (POSIX file \"$0\")"
+      elif [ -n "$WAYLAND_DISPLAY" ]; then
+        echo -n "file://$0" | wl-copy -t text/uri-list
+      elif [ -n "$DISPLAY" ]; then
+        echo -n "file://$0" | xclip -selection clipboard -t text/uri-list
+      fi
+    '
+  ''', desc = "Copy file to system clipboard (cross-platform)" },
+]
