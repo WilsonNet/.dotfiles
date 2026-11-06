@@ -44,6 +44,7 @@ The wiki documents "Latest git" by default and is versioned — always check the
 - Quickshell creates/removes one `PanelWindow` bar per screen reactively (`Quickshell.screens` Variants); do NOT kill/restart it on monitor changes. Config edits hot-reload on save; a hard restart is `qs kill` + `quickshell &`. Layer namespace is `quickshell` (check with `hyprctl layers`).
 - `waybar_timer` is NOT the bar spawner: it's a pomodoro/timer DBus daemon used by the quickshell `Timer` widget. Its `hook` subcommand streams status JSON.
 - `require()` splits configs into separate error-protected scopes; `require("nonexistent")` will kill the main config (wrap in `pcall` if needed).
+- `render.cm_auto_hdr = 0` and `render.send_content_type = false` are set on purpose in the look & feel block. Hyprland 0.57 advertises HDR to clients when a display reports it, then flips the output to HDR (`cm,hdr`) whenever a window goes fullscreen — a full modeset, so the LG panels blank and come back green/washed out. Don't re-enable without checking that a fullscreen toggle adds no `Modesetting` lines to `hyprctl rollinglog`. Per-app escape hatch if HDR is ever wanted: a `no_auto_hdr = true` window rule. Upstream: hyprwm/Hyprland discussion #16756.
 
 ## This Config's Structure
 

@@ -243,6 +243,21 @@ hl.config({
         force_zero_scaling = true,
     },
 
+    -- Hyprland 0.57 offers HDR to clients whenever a display reports HDR
+    -- support, and cm_auto_hdr then flips the output to HDR when an app goes
+    -- fullscreen. On the LG panels here that is a full modeset: the screen
+    -- blanks and comes back green/washed out (the monitor re-negotiates its
+    -- picture profile). Keep auto-HDR off; re-enable if we ever want
+    -- fullscreen HDR video.
+    -- Upstream: https://github.com/hyprwm/Hyprland/discussions/16756
+    render = {
+        cm_auto_hdr = 0,
+        -- Lets the monitor switch its own picture profile on content-type
+        -- changes. The wiki warns this "may result in a black screen during
+        -- the switch", which is the other half of the fullscreen blink.
+        send_content_type = false,
+    },
+
     general = {
         gaps_in  = 5,
         gaps_out = 20,
